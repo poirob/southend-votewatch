@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Southend Council VoteWatch — Recorded Division & Alignment Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-light: #64748b;
+      --primary: #1e3a8a;
+      --primary-light: #eff6ff;
+      --accent: #0284c7;
+
+      /* Vote State Colours */
+      --vote-for: #16a34a;
+      --vote-for-bg: #dcfce7;
+      --vote-against: #dc2626;
+      --vote-against-bg: #fee2e2;
+      --vote-abstain: #d97706;
+      --vote-abstain-bg: #fef3c7;
+      --vote-novote: #7c3aed;
+      --vote-novote-bg: #ede9fe;
+      --vote-absent: #64748b;
+      --vote-absent-bg: #f1f5f9;
+
+      /* Political Party Colours */
+      --party-lab: #e4003b;
+      --party-con: #0087dc;
+      --party-ref: #12b6cf;
+      --party-ld: #faa61a;
+      --party-grn: #00b140;
+      --party-ind: #8b5cf6;
+      --party-non: #64748b;
+
+      --radius: 10px;
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Header & Civic Bar */
+    .top-header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 1.25rem 1.5rem 0 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 1.25rem;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-badge {
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .brand-title h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-pill span.label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+    }
+
+    .stat-pill span.val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      background: transparent;
+      color: #cbd5e1;
+      border: none;
+      padding: 0.75rem 1.15rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .nav-tab:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .nav-tab.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+      background: rgba(15, 23, 42, 0.35);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tab-count {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1400px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    .lens-section {
+      display: none;
+    }
+
+    .lens-section.active {
+      display: block;
+    }
+
+    /* Controls / Filter Bar */
+    .filter-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .filter-group label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-light);
+      letter-spacing: 0.04em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #172554;
+    }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-success {
+      background: #16a34a;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #15803d;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem;
+    }
+
+    /* Party Badges */
+    .party-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .party-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .bg-lab { background-color: var(--party-lab); }
+    .bg-con { background-color: var(--party-con); }
+    .bg-ref { background-color: var(--party-ref); color: #082f49; }
+    .bg-ld  { background-color: var(--party-ld); color: #0f172a; }
+    .bg-grn { background-color: var(--party-grn); }
+    .bg-ind { background-color: var(--party-ind); }
+    .bg-non { background-color: var(--party-non); }
+
+    /* Vote Pills */
+    .vote-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .vote-for { background: var(--vote-for-bg); color: #166534; border: 1px solid #86efac; }
+    .vote-against { background: var(--vote-against-bg); color: #991b1b; border: 1px solid #fca5a5; }
+    .vote-abstain { background: var(--vote-abstain-bg); color: #92400e; border: 1px solid #fde68a; }
+    .vote-no_vote { background: var(--vote-novote-bg); color: #5b21b6; border: 1px solid #ddd6fe; }
+    .vote-absent { background: var(--vote-absent-bg); color: #475569; border: 1px solid #cbd5e1; }
+
+    .rebel-tag {
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #fda4af;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    /* Motion Cards (Lens 1: Vote Explorer) */
+    .motion-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .motion-card:hover {
+      border-color: #94a3b8;
+    }
+
+    .motion-card-header {
+      padding: 1.25rem;
+      cursor: pointer;
+    }
+
+    .motion-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .motion-tags {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tag-badge {
+      background: var(--surface-alt);
+      border: 1px solid var(--border-strong);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 5px;
+    }
+
+    .outcome-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.2rem 0.65rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .outcome-passed { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .outcome-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    .motion-title {
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+
+    .motion-summary {
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      margin-bottom: 0.9rem;
+    }
+
+    /* Proportional Vote Bar */
+    .vote-bar-wrap {
+      margin: 0.75rem 0;
+    }
+
+    .vote-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .vote-bar-track {
+      height: 12px;
+      width: 100%;
+      background: var(--surface-alt);
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .bar-seg-for { background: var(--vote-for); }
+    .bar-seg-against { background: var(--vote-against); }
+    .bar-seg-abstain { background: var(--vote-abstain); }
+    .bar-seg-no_vote { background: var(--vote-novote); }
+    .bar-seg-absent { background: #cbd5e1; }
+
+    /* Party Split Pills Row */
+    .party-splits-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.85rem;
+      padding-top: 0.85rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .party-split-pill {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .party-split-pill.split-alert {
+      background: #fffbeb;
+      border-color: #fcd34d;
+    }
+
+    /* Expanded Motion Inspection Drawer */
+    .motion-details {
+      display: none;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      padding: 1.25rem;
+    }
+
+    .motion-card.expanded .motion-details {
+      display: block;
+    }
+
+    .division-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    .division-col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .division-col h4 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.65rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .voter-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+
+    .voter-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.4rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .voter-item:hover {
+      background: var(--surface-alt);
+    }
+
+    /* Lens 2: Alignment & Rebels Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .panel-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    /* Matrix Table */
+    .matrix-table-wrap {
+      overflow-x: auto;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    table.data-table th,
+    table.data-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: var(--surface-alt);
+      font-weight: 700;
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
+
+    table.data-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    .heat-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      text-align: center !important;
+      border-radius: 4px;
+    }
+
+    /* Head-to-Head Dyad Comparator */
+    .dyad-selector-box {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.75rem;
+      align-items: center;
+      background: var(--surface-alt);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .dyad-score-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--primary-light);
+      border: 1px solid #bfdbfe;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .dyad-big-pct {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Lens 3: Councillor Dossiers */
+    .cllr-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .cllr-layout {
+        grid-template-columns: 1fr;
+      }
+      .dyad-selector-box {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cllr-list-Pane {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-height: 750px;
+      overflow-y: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cllr-list-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.12s;
+    }
+
+    .cllr-list-item:hover {
+      background: var(--surface-alt);
+    }
+
+    .cllr-list-item.selected {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+    }
+
+    .cllr-name-block .name {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+
+    .cllr-name-block .sub {
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .dossier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .kpi-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .kpi-box .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      color: var(--text-light);
+      font-weight: 700;
+    }
+
+    .kpi-box .kpi-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 0.2rem;
+    }
+
+    /* Lens 4: Minute-to-JSON Parser */
+    .parser-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 960px) {
+      .parser-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .checksum-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.45rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .checksum-ok {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .checksum-warn {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .code-preview {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      max-height: 360px;
+      white-space: pre;
+    }
+
+    .unmatched-card {
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-pill {
+      font-size: 0.68rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-vacating { background: #fef3c7; color: #b45309; }
+    .status-former { background: #e2e8f0; color: #475569; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP CIVIC HEADER -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div class="header-top-row">
+        <div>
+          <div class="brand-title">
+            <span class="brand-badge">Southend-on-Sea</span>
+            <h1>Council VoteWatch & Alignment Explorer</h1>
+          </div>
+          <p class="brand-subtitle">Recorded Standing Order 3.44 Divisions, Party Cohesion & Councillor Dossiers (2026–2027 Session)</p>
+        </div>
+
+        <div class="header-stats">
+          <div class="stat-pill">
+            <span class="label">Active Seats</span>
+            <span class="val" id="stat-active-seats">51</span>
+          </div>
+          <div class="stat-pill">
+            <span class="label">Total Roster</span>
+            <span class="val" id="stat-total-cllrs">63</span>
+          </div>
+          <div class="stat-pill">
+            <span class="label">Recorded Votes</span>
+            <span class="val" id="stat-total-motions">5</span>
+          </div>
+          <div class="stat-pill">
+            <span class="label">Rebel / Split Votes</span>
+            <span class="val" id="stat-rebel-count">0</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="exportFullDatabase()" title="Download councillors & motions as JSON">
+            ⬇ Export JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN NAVIGATION LENSES -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" onclick="switchTab('motions', this)">
+          1. Vote Explorer <span class="tab-count" id="tab-count-motions">5</span>
+        </button>
+        <button class="nav-tab" onclick="switchTab('alignment', this)">
+          2. Alignment & Rebels Matrix
+        </button>
+        <button class="nav-tab" onclick="switchTab('dossiers', this)">
+          3. Councillor Dossiers <span class="tab-count" id="tab-count-cllrs">63</span>
+        </button>
+        <button class="nav-tab" onclick="switchTab('parser', this)">
+          4. Minute-to-JSON Parser <span class="tab-count">+ Add Vote</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="main-container">
+
+    <!-- ==========================================
+         LENS 1: MOTION / VOTE EXPLORER
+         ========================================== -->
+    <section id="lens-motions" class="lens-section active">
+      <div class="filter-bar">
+        <div class="filter-group" style="flex: 2;">
+          <label for="motion-search">Search Motions, Summaries or Councillors</label>
+          <input type="text" id="motion-search" placeholder="e.g. Green Belt, Budget, Council Tax, Amendment..." oninput="renderMotions()" />
+        </div>
+        <div class="filter-group">
+          <label for="motion-cat-filter">Policy Category</label>
+          <select id="motion-cat-filter" onchange="renderMotions()">
+            <option value="ALL">All Categories</option>
+            <option value="Green Belt & Planning">Green Belt & Planning</option>
+            <option value="Budget & Finance">Budget & Finance</option>
+            <option value="Highways & Transport">Highways & Transport</option>
+            <option value="Governance & Civic">Governance & Civic</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="motion-outcome-filter">Outcome / Split Filter</label>
+          <select id="motion-outcome-filter" onchange="renderMotions()">
+            <option value="ALL">All Outcomes</option>
+            <option value="Passed">Passed Only</option>
+            <option value="Rejected">Rejected Only</option>
+            <option value="REBEL">Has Party Rebellion / Split</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="motions-list-container"></div>
+    </section>
+
+    <!-- ==========================================
+         LENS 2: ALIGNMENT & LOYALTY MATRIX
+         ========================================== -->
+    <section id="lens-alignment" class="lens-section">
+      <!-- Head-to-Head Councillor Comparator -->
+      <div class="panel-card" style="margin-bottom: 1.25rem;">
+        <h3>Head-to-Head Councillor Voting Comparator</h3>
+        <p class="panel-subtitle">Select any two councillors to calculate how often they vote the same way when both cast an active vote (For, Against, or Abstain) and inspect where they diverged.</p>
+
+        <div class="dyad-selector-box">
+          <div>
+            <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Councillor A</label>
+            <select id="dyad-cllr-a" onchange="renderDyadComparison()"></select>
+          </div>
+          <div style="font-weight:800; color:var(--text-light); padding-top:1rem;">VS</div>
+          <div>
+            <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Councillor B</label>
+            <select id="dyad-cllr-b" onchange="renderDyadComparison()"></select>
+          </div>
+        </div>
+
+        <div id="dyad-results-container"></div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Rebel & Party Whip Deviations Leaderboard -->
+        <div class="panel-card">
+          <h3>Party Whip Deviations & Rebel Tracker</h3>
+          <p class="panel-subtitle">Instances where a councillor voted differently from the plurality of their own political group on a recorded division.</p>
+          <div class="matrix-table-wrap">
+            <table class="data-table" id="rebel-leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Councillor</th>
+                  <th>Group</th>
+                  <th>Loyalty %</th>
+                  <th>Deviations</th>
+                  <th>Key Rebel / Split Division</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Inter-Party Voting Alignment Matrix -->
+        <div class="panel-card">
+          <h3>Inter-Party Coalition & Opposition Cohesion Matrix</h3>
+          <p class="panel-subtitle">Percentage of recorded divisions where the majority of each political group voted the same way.</p>
+          <div class="matrix-table-wrap" id="party-matrix-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         LENS 3: COUNCILLOR DOSSIERS
+         ========================================== -->
+    <section id="lens-dossiers" class="lens-section">
+      <div class="filter-bar">
+        <div class="filter-group" style="flex: 2;">
+          <label for="cllr-search">Search Councillor by Name, Ward or Role</label>
+          <input type="text" id="cllr-search" placeholder="e.g. Cowan, Courtenay, Cox, Milton, Leigh..." oninput="renderCllrDirectory()" />
+        </div>
+        <div class="filter-group">
+          <label for="cllr-party-filter">Political Group</label>
+          <select id="cllr-party-filter" onchange="renderCllrDirectory()">
+            <option value="ALL">All Political Groups</option>
+            <option value="Labour Group">Labour Group (17)</option>
+            <option value="Conservative Group">Conservative Group (11 active)</option>
+            <option value="Reform UK Group">Reform UK Group (11)</option>
+            <option value="Liberal Democrat Group">Liberal Democrat Group (3 active)</option>
+            <option value="Green Group">Green Group (4)</option>
+            <option value="Rochford & Southend East Independents Group">RSE Independents Group (3 active)</option>
+            <option value="Not Aligned">Non-Aligned Independents (2 active)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="cllr-status-filter">Cohort Status</label>
+          <select id="cllr-status-filter" onchange="renderCllrDirectory()">
+            <option value="ALL">All Councillors (63)</option>
+            <option value="CURRENT">Current 2026/27 Chamber (51)</option>
+            <option value="former">Former / Pre-May 2026 Alumni (12)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cllr-layout">
+        <div class="cllr-list-Pane" id="cllr-directory-list"></div>
+        <div class="panel-card" id="cllr-dossier-detail"></div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         LENS 4: MINUTE-TO-JSON PARSER
+         ========================================== -->
+    <section id="lens-parser" class="lens-section">
+      <div class="parser-grid">
+        <!-- Left Column: Input Form -->
+        <div class="panel-card">
+          <h3>Southend Council Minute-to-JSON Parser</h3>
+          <p class="panel-subtitle">Copy and paste any recorded vote block from a Southend City Council PDF or HTML minutes pack. The parser automatically strips prefixes, checks parenthetical totals, and maps names to councillor IDs.</p>
+
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+            <button class="btn btn-secondary btn-sm" onclick="loadParserPreset('greenbelt')">
+              📋 Load Sample 1: Aug 2026 Green Belt Vote
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadParserPreset('simulated')">
+              📋 Load Sample 2: Simulated Seafront Parking Division (with OCR Typo)
+            </button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+            <div>
+              <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Meeting Date</label>
+              <input type="date" id="parse-date" value="2026-10-15" />
+            </div>
+            <div>
+              <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Minute Reference</label>
+              <input type="text" id="parse-minref" placeholder="e.g. 58" value="58" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:0.75rem;">
+            <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Motion / Amendment Title</label>
+            <input type="text" id="parse-title" placeholder="e.g. Notice of Motion: Seafront Winter Parking Tariff Review" />
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+            <div>
+              <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Policy Category</label>
+              <select id="parse-category">
+                <option value="Green Belt & Planning">Green Belt & Planning</option>
+                <option value="Budget & Finance">Budget & Finance</option>
+                <option value="Highways & Transport">Highways & Transport</option>
+                <option value="Governance & Civic">Governance & Civic</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Outcome</label>
+              <select id="parse-outcome">
+                <option value="Passed">Passed</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:0.75rem;">
+            <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Brief Summary</label>
+            <input type="text" id="parse-summary" placeholder="Plain-English description of what a 'For' vote meant..." />
+          </div>
+
+          <div style="margin-bottom:0.85rem;">
+            <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Raw Minutes Text Block (Paste from Modern.Gov)</label>
+            <textarea id="parse-raw-text" rows="9" placeholder="For: Councillors S W Allen, S Allen, Aylen, Badger... (31)&#10;Against: Councillors Borton, Dent... (11)&#10;Abstentions: None (0)&#10;No Vote: Councillors Cowan... (4)&#10;Absent for the vote: Councillors Bright... (5)" oninput="runMinuteParser()"></textarea>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="runMinuteParser()">
+              ⚙ Parse & Validate Text
+            </button>
+            <button class="btn btn-success" id="btn-save-parsed" onclick="saveParsedMotionToApp()" disabled>
+              ✓ Append to App & Save to Browser
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Diagnostics & JSON Output -->
+        <div class="panel-card">
+          <h3>Live Checksum Diagnostics & JSON Output</h3>
+          <p class="panel-subtitle">Verifies matched councillor IDs against the clerk's parenthetical headcounts.</p>
+
+          <div id="parser-diagnostics-box" style="margin-bottom: 1rem;"></div>
+          <div id="parser-unmatched-box"></div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <label style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Generated Motion JSON Object</label>
+            <button class="btn btn-secondary btn-sm" onclick="copyParsedJson()">Copy JSON</button>
+          </div>
+          <pre class="code-preview" id="parser-json-preview">// Paste council minutes or click a sample button on the left to generate structured JSON...</pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /* =========================================================================
+       1. MASTER DATASET: 63 COUNCILLORS (51 CURRENT 2026/27 + 12 FORMER ALUMNI)
+       ========================================================================= */
+    const INITIAL_COUNCILLORS = [
+      // --- CURRENT 2026/27 CHAMBER (51 SEATS) ---
+      { id: "cllr-sam-allen", name: "Sam Allen", minute_alias: "S Allen", aliases: ["S Allen", "Sam Allen"], ward: "Milton", party: "Labour", group: "Labour Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-stuart-allen", name: "Stuart Allen", minute_alias: "S W Allen", aliases: ["S W Allen", "Stuart Allen"], ward: "Leigh", party: "Green", group: "Green Group", roles: ["Former Green Group Spokesperson (Stepped down Oct 2026)"], term_ends: 2028, status: "vacating" },
+      { id: "cllr-stephen-aylen", name: "Stephen Aylen", minute_alias: "Aylen", aliases: ["Aylen", "S Aylen", "Stephen Aylen"], ward: "Belfairs", party: "Independent (Non-Aligned)", group: "Not Aligned", roles: [], term_ends: 2027, status: "active" },
+      { id: "cllr-susan-badger", name: "Susan Badger", minute_alias: "Badger", aliases: ["Badger", "S Badger", "Susan Badger"], ward: "Thorpe", party: "Independent", group: "Rochford & Southend East Independents Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-martin-berry", name: "Martin Berry", minute_alias: "Berry", aliases: ["Berry", "M Berry", "Martin Berry"], ward: "St Luke's", party: "Independent (Non-Aligned)", group: "Not Aligned", roles: [], term_ends: 2027, status: "active" },
+      { id: "cllr-frankie-bird", name: "Frankie Bird", minute_alias: "Bird", aliases: ["Bird", "F Bird", "Frankie Bird"], ward: "St Laurence", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-margaret-borton", name: "Margaret Borton", minute_alias: "Borton", aliases: ["Borton", "M Borton", "Margaret Borton"], ward: "Victoria", party: "Labour", group: "Labour Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-martin-bright", name: "Martin Bright", minute_alias: "Bright", aliases: ["Bright", "M Bright", "Martin Bright"], ward: "Southchurch", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-colin-campbell", name: "Colin Campbell", minute_alias: "Campbell", aliases: ["Campbell", "C Campbell", "Colin Campbell"], ward: "Southchurch", party: "Conservative", group: "Conservative Group", roles: ["Conservative Group Whip"], term_ends: 2027, status: "active" },
+      { id: "cllr-owen-cartey", name: "Owen Cartey", minute_alias: "Cartey", aliases: ["Cartey", "O Cartey", "Owen Cartey"], ward: "West Leigh", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2027, status: "active" },
+      { id: "cllr-paul-collins", name: "Paul Collins", minute_alias: "Collins", aliases: ["Collins", "P Collins", "Paul Collins"], ward: "Eastwood Park", party: "Liberal Democrats", group: "Liberal Democrat Group", roles: ["Liberal Democrat Group Leader", "Cabinet Member for Finance and Transport"], term_ends: 2027, status: "active" },
+      { id: "cllr-john-corrigan", name: "John Corrigan", minute_alias: "Corrigan", aliases: ["Corrigan", "J Corrigan", "John Corrigan"], ward: "Thorpe", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-james-courtenay", name: "James Courtenay", minute_alias: "Courtenay", aliases: ["Courtenay", "J Courtenay", "James Courtenay"], ward: "Chalkwell", party: "Conservative", group: "Conservative Group", roles: ["Leader of the Conservative Group"], term_ends: 2028, status: "active" },
+      { id: "cllr-daniel-cowan", name: "Daniel Cowan", minute_alias: "Cowan", aliases: ["Cowan", "D Cowan", "Daniel Cowan"], ward: "St Laurence", party: "Labour & Co-operative", group: "Labour Group", roles: ["Leader of the Council", "Cabinet Member for Regeneration and Devolution"], term_ends: 2027, status: "active" },
+      { id: "cllr-tony-cox", name: "Tony Cox", minute_alias: "Cox", aliases: ["Cox", "T Cox", "Tony Cox"], ward: "West Shoebury", party: "Reform UK", group: "Reform UK Group", roles: ["Mayor of Southend", "Leader of the Southend Reform UK Group"], term_ends: 2027, status: "active" },
+      { id: "cllr-meg-davidson", name: "Meg Davidson", minute_alias: "Davidson", aliases: ["Davidson", "M Davidson", "Meg Davidson"], ward: "Prittlewell", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2027, status: "active" },
+      { id: "cllr-matt-dent", name: "Matt Dent", minute_alias: "Dent", aliases: ["Dent", "M Dent", "Matt Dent"], ward: "Kursaal", party: "Labour & Co-operative", group: "Labour Group", roles: ["Cabinet Member for Business, Culture, Music and Tourism"], term_ends: 2030, status: "active" },
+      { id: "cllr-madison-faulkner-hatt", name: "Madison Faulkner-Hatt", minute_alias: "Madison Faulkner-Hatt", aliases: ["Madison Faulkner-Hatt", "M Faulkner-Hatt", "Faulkner-Hatt"], ward: "St Laurence", party: "Labour", group: "Labour Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-irene-ferguson", name: "Irene Ferguson", minute_alias: "Ferguson", aliases: ["Ferguson", "I Ferguson", "Irene Ferguson"], ward: "Kursaal", party: "Labour", group: "Labour Group", roles: ["Cabinet Member for Housing and Preventing Homelessness"], term_ends: 2028, status: "active" },
+      { id: "cllr-anita-forde", name: "Anita Forde", minute_alias: "Forde", aliases: ["Forde", "A Forde", "Anita Forde"], ward: "Leigh", party: "Green", group: "Green Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-david-garston", name: "David Garston", minute_alias: "Garston", aliases: ["Garston", "D Garston", "David Garston"], ward: "Prittlewell", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-ian-gilbert", name: "Ian Gilbert", minute_alias: "Gilbert", aliases: ["Gilbert", "I Gilbert", "Ian Gilbert"], ward: "Victoria", party: "Labour", group: "Labour Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-stephen-habermel", name: "Stephen Habermel", minute_alias: "Habermel", aliases: ["Habermel", "S Habermel", "Stephen Habermel"], ward: "Chalkwell", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2027, status: "active" },
+      { id: "cllr-stephen-harvey", name: "Stephen Harvey", minute_alias: "Harvey", aliases: ["Harvey", "S Harvey", "Stephen Harvey"], ward: "West Shoebury", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-michael-heaver", name: "Michael Heaver", minute_alias: "Heaver", aliases: ["Heaver", "M Heaver", "Michael Heaver"], ward: "Prittlewell", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-anne-jones", name: "Anne Jones", minute_alias: "A Jones", aliases: ["A Jones", "Anne Jones"], ward: "Westborough", party: "Labour", group: "Labour Group", roles: ["Deputy Mayor", "Labour Group Whip"], term_ends: 2027, status: "active" },
+      { id: "cllr-darryl-jones", name: "Darryl Jones", minute_alias: "Darryl Jones", aliases: ["Darryl Jones", "D Jones"], ward: "Southchurch", party: "Reform UK", group: "Reform UK Group", roles: ["Reform UK Group Whip"], term_ends: 2028, status: "active" },
+      { id: "cllr-pamela-kinsella", name: "Pamela Kinsella", minute_alias: "Kinsella", aliases: ["Kinsella", "P Kinsella", "Pamela Kinsella"], ward: "Westborough", party: "Labour", group: "Labour Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-richard-longstaff", name: "Richard Longstaff", minute_alias: "Longstaff", aliases: ["Longstaff", "R Longstaff", "Richard Longstaff"], ward: "Leigh", party: "Green", group: "Green Group", roles: ["Green Group Deputy Spokesperson"], term_ends: 2027, status: "active" },
+      { id: "cllr-judith-mcmahon", name: "Judith McMahon", minute_alias: "McMahon", aliases: ["McMahon", "J McMahon", "Judith McMahon"], ward: "Shoeburyness", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-robert-mcmullan", name: "Robert McMullan", minute_alias: "McMullan", aliases: ["McMullan", "R McMullan", "Robert McMullan"], ward: "Eastwood Park", party: "Liberal Democrats", group: "Liberal Democrat Group", roles: ["Deputy Leader - Liberal Democrat Group"], term_ends: 2030, status: "active" },
+      { id: "cllr-kay-mitchell", name: "Kay Mitchell", minute_alias: "Mitchell", aliases: ["Mitchell", "K Mitchell", "Kay Mitchell"], ward: "Chalkwell", party: "Green", group: "Green Group", roles: ["Green Group Spokesperson"], term_ends: 2030, status: "active" },
+      { id: "cllr-alex-moyies", name: "Alex Moyies", minute_alias: "A Moyies", aliases: ["A Moyies", "Alex Moyies"], ward: "Shoeburyness", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-james-moyies", name: "James Moyies", minute_alias: "J Moyies", aliases: ["J Moyies", "James Moyies", "Moyies"], ward: "West Shoebury", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-shahid-nadeem", name: "Shahid Nadeem", minute_alias: "Nadeem", aliases: ["Nadeem", "S Nadeem", "Shahid Nadeem"], ward: "Blenheim Park", party: "Labour & Co-operative", group: "Labour Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-cheryl-nevin", name: "Cheryl Nevin", minute_alias: "Nevin", aliases: ["Nevin", "C Nevin", "Cheryl Nevin"], ward: "Milton", party: "Labour", group: "Labour Group", roles: ["Cabinet Member for Civic Pride"], term_ends: 2027, status: "active" },
+      { id: "cllr-jane-norman", name: "Jane Norman", minute_alias: "Norman", aliases: ["Norman", "J Norman", "Jane Norman"], ward: "St Luke's", party: "Labour", group: "Labour Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-mandy-oconnor", name: "Mandy O'Connor", minute_alias: "O'Connor", aliases: ["O'Connor", "M O'Connor", "Mandy O'Connor", "O’Connor"], ward: "Victoria", party: "Labour", group: "Labour Group", roles: ["Cabinet Member for Children and SEND"], term_ends: 2027, status: "active" },
+      { id: "cllr-james-orourke", name: "James O'Rourke", minute_alias: "O'Rourke", aliases: ["O'Rourke", "J O'Rourke", "James O'Rourke", "O’Rourke"], ward: "St Luke's", party: "Reform UK", group: "Reform UK Group", roles: ["Deputy Leader of the Reform UK Group"], term_ends: 2030, status: "active" },
+      { id: "cllr-dave-poulton", name: "Dave Poulton", minute_alias: "Poulton", aliases: ["Poulton", "D Poulton", "Dave Poulton"], ward: "Eastwood Park", party: "Liberal Democrats", group: "Liberal Democrat Group", roles: ["Liberal Democrat Group Whip"], term_ends: 2028, status: "active" },
+      { id: "cllr-donna-richardson", name: "Donna Richardson", minute_alias: "Richardson", aliases: ["Richardson", "D Richardson", "Donna Richardson"], ward: "Blenheim Park", party: "Labour", group: "Labour Group", roles: [], term_ends: 2027, status: "active" },
+      { id: "cllr-kevin-robinson", name: "Kevin Robinson", minute_alias: "Robinson", aliases: ["Robinson", "K Robinson", "Kevin Robinson"], ward: "Westborough", party: "Labour", group: "Labour Group", roles: ["Cabinet Member for Planning, Property and Governance"], term_ends: 2030, status: "active" },
+      { id: "cllr-maxine-sadza", name: "Maxine Sadza", minute_alias: "Sadza", aliases: ["Sadza", "M Sadza", "Maxine Sadza"], ward: "Milton", party: "Labour", group: "Labour Group", roles: ["Deputy Leader of the Council", "Cabinet Member for Social Care and Healthier Communities"], term_ends: 2030, status: "active" },
+      { id: "cllr-lesley-salter", name: "Lesley Salter", minute_alias: "Salter", aliases: ["Salter", "L Salter", "Lesley Salter"], ward: "West Leigh", party: "Conservative", group: "Conservative Group", roles: ["Deputy Group Leader - Conservative Group"], term_ends: 2028, status: "active" },
+      { id: "cllr-alexander-shaw", name: "Dr Alexander Shaw", minute_alias: "Dr Shaw", aliases: ["Dr Shaw", "A Shaw", "Shaw", "Dr Alexander Shaw", "Alexander Shaw"], ward: "West Leigh", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-steven-wakefield", name: "Steven Wakefield", minute_alias: "Wakefield", aliases: ["Wakefield", "S Wakefield", "Steven Wakefield"], ward: "Shoeburyness", party: "Independent", group: "Rochford & Southend East Independents Group", roles: ["Deputy Spokesperson - RSE Independent Group"], term_ends: 2027, status: "active" },
+      { id: "cllr-jack-warren", name: "Jack Warren", minute_alias: "Warren", aliases: ["Warren", "J Warren", "Jack Warren"], ward: "Belfairs", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2028, status: "active" },
+      { id: "cllr-craig-watt", name: "Craig Watt", minute_alias: "Watt", aliases: ["Watt", "C Watt", "Craig Watt"], ward: "Blenheim Park", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-chris-webster", name: "Chris Webster", minute_alias: "Webster", aliases: ["Webster", "C Webster", "Chris Webster"], ward: "Kursaal", party: "Labour", group: "Labour Group", roles: ["Cabinet Member for Technology, Learning and Customer Services"], term_ends: 2027, status: "active" },
+      { id: "cllr-oscar-wood", name: "Oscar Wood", minute_alias: "Wood", aliases: ["Wood", "O Wood", "Oscar Wood"], ward: "Belfairs", party: "Reform UK", group: "Reform UK Group", roles: [], term_ends: 2030, status: "active" },
+      { id: "cllr-ron-woodley", name: "Ron Woodley", minute_alias: "Woodley", aliases: ["Woodley", "R Woodley", "Ron Woodley"], ward: "Thorpe", party: "Independent", group: "Rochford & Southend East Independents Group", roles: ["Cabinet Member for Capital Projects and Public Protection", "Lead Spokesperson - RSE Independent Group"], term_ends: 2027, status: "active" },
+
+      // --- FORMER / ALUMNI COUNCILLORS (2024–MAY 2026 COHORT) ---
+      { id: "cllr-kevin-buck", name: "Kevin Buck", minute_alias: "Buck", aliases: ["Buck", "K Buck", "Kevin Buck"], ward: "Prittlewell", party: "Conservative", group: "Conservative Group", roles: ["Former Shadow Cabinet Member"], term_ends: 2026, status: "former" },
+      { id: "cllr-laurie-burton", name: "Laurie Burton", minute_alias: "Burton", aliases: ["Burton", "L Burton", "Laurie Burton"], ward: "Blenheim Park", party: "Labour", group: "Labour Group", roles: ["Former Cabinet Member for Children, Learning and SEND"], term_ends: 2026, status: "former" },
+      { id: "cllr-alan-dear", name: "Alan Dear", minute_alias: "Dear", aliases: ["Dear", "A Dear", "Alan Dear"], ward: "Belfairs", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2026, status: "former" },
+      { id: "cllr-fiona-evans", name: "Fiona Evans", minute_alias: "Evans", aliases: ["Evans", "F Evans", "Fiona Evans"], ward: "West Leigh", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2026, status: "former" },
+      { id: "cllr-nigel-folkard", name: "Nigel Folkard", minute_alias: "Folkard", aliases: ["Folkard", "N Folkard", "Nigel Folkard", "The Worshipful the Mayor"], ward: "Thorpe", party: "Conservative", group: "Conservative Group", roles: ["Mayor of Southend (2025/26)"], term_ends: 2026, status: "former" },
+      { id: "cllr-john-harland", name: "John Harland", minute_alias: "Harland", aliases: ["Harland", "Harlan", "J Harland", "John Harland"], ward: "West Shoebury", party: "Conservative", group: "Conservative Group", roles: [], term_ends: 2026, status: "former" },
+      { id: "cllr-lydia-hyde", name: "Lydia Hyde", minute_alias: "Hyde", aliases: ["Hyde", "L Hyde", "Lydia Hyde"], ward: "St Laurence", party: "Labour", group: "Labour Group", roles: ["Former Cabinet Member for Climate, Environment and Waste"], term_ends: 2026, status: "former" },
+      { id: "cllr-carole-mulroney", name: "Carole Mulroney", minute_alias: "Mulroney", aliases: ["Mulroney", "C Mulroney", "Carole Mulroney"], ward: "Leigh", party: "Liberal Democrats", group: "Liberal Democrat Group", roles: [], term_ends: 2026, status: "former" },
+      { id: "cllr-kathy-murphy", name: "Kathy Murphy", minute_alias: "Murphy", aliases: ["Murphy", "K Murphy", "Kathy Murphy"], ward: "St Luke's", party: "Labour", group: "Labour Group", roles: [], term_ends: 2026, status: "former" },
+      { id: "cllr-daniel-nelson", name: "Daniel Nelson", minute_alias: "Nelson", aliases: ["Nelson", "D Nelson", "Daniel Nelson"], ward: "Southchurch", party: "Independent (Non-Aligned)", group: "Not Aligned", roles: [], term_ends: 2026, status: "former" },
+      { id: "cllr-martin-terry", name: "Martin Terry", minute_alias: "Terry", aliases: ["Terry", "M Terry", "Martin Terry"], ward: "Thorpe", party: "Independent", group: "Rochford & Southend East Independents Group", roles: ["Former Cabinet Member for Community Safety"], term_ends: 2026, status: "former" },
+      { id: "cllr-nick-ward", name: "Nick Ward", minute_alias: "Ward", aliases: ["Ward", "N Ward", "Nick Ward"], ward: "Shoeburyness", party: "Independent", group: "Rochford & Southend East Independents Group", roles: [], term_ends: 2026, status: "former" }
+    ];
+
+    /* =========================================================================
+       2. INITIAL MOTIONS: 5 REAL 2026 SOUTHEND RECORDED DIVISIONS
+       ========================================================================= */
+    const INITIAL_MOTIONS = [
+      {
+        id: "motion-2026-08-24-min42",
+        meeting_date: "2026-08-24",
+        meeting_type: "Extraordinary Council",
+        minute_ref: "42",
+        title: "Notice of Motion: Reaffirmation of the Existing Adopted Development Plan & Green Belt Protection",
+        category: "Green Belt & Planning",
+        proposer: "cllr-alex-moyies",
+        seconder: "cllr-james-moyies",
+        outcome: "Passed",
+        source_url: "https://democracy.southend.gov.uk/documents/s72576/Minutes%20Public%20Pack%2024082026%20The%20Council.pdf",
+        summary: "Cross-party motion reaffirming the existing Adopted Development Plan and protecting Green Belt land around Southend. Supported by Reform UK, Conservatives, Greens, Liberal Democrats, Independents, and Labour rebel Cllr Sam Allen; opposed by 11 Labour members with 4 Labour Cabinet members recording 'No Vote'.",
+        tally: { for: 31, against: 11, abstain: 0, no_vote: 4, absent: 5 },
+        votes: {
+          "cllr-stuart-allen": "for", "cllr-sam-allen": "for", "cllr-stephen-aylen": "for", "cllr-susan-badger": "for",
+          "cllr-martin-berry": "for", "cllr-frankie-bird": "for", "cllr-colin-campbell": "for", "cllr-paul-collins": "for",
+          "cllr-john-corrigan": "for", "cllr-james-courtenay": "for", "cllr-tony-cox": "for", "cllr-anita-forde": "for",
+          "cllr-david-garston": "for", "cllr-stephen-habermel": "for", "cllr-stephen-harvey": "for", "cllr-michael-heaver": "for",
+          "cllr-darryl-jones": "for", "cllr-richard-longstaff": "for", "cllr-judith-mcmahon": "for", "cllr-robert-mcmullan": "for",
+          "cllr-kay-mitchell": "for", "cllr-alex-moyies": "for", "cllr-james-moyies": "for", "cllr-james-orourke": "for",
+          "cllr-dave-poulton": "for", "cllr-lesley-salter": "for", "cllr-alexander-shaw": "for", "cllr-steven-wakefield": "for",
+          "cllr-jack-warren": "for", "cllr-craig-watt": "for", "cllr-ron-woodley": "for",
+          "cllr-margaret-borton": "against", "cllr-matt-dent": "against", "cllr-madison-faulkner-hatt": "against",
+          "cllr-ian-gilbert": "against", "cllr-anne-jones": "against", "cllr-pamela-kinsella": "against",
+          "cllr-cheryl-nevin": "against", "cllr-jane-norman": "against", "cllr-kevin-robinson": "against",
+          "cllr-maxine-sadza": "against", "cllr-chris-webster": "against",
+          "cllr-daniel-cowan": "no_vote", "cllr-irene-ferguson": "no_vote", "cllr-shahid-nadeem": "no_vote", "cllr-mandy-oconnor": "no_vote",
+          "cllr-martin-bright": "absent", "cllr-owen-cartey": "absent", "cllr-meg-davidson": "absent",
+          "cllr-donna-richardson": "absent", "cllr-oscar-wood": "absent"
+        }
+      },
+      {
+        id: "motion-2026-02-26-min107-main",
+        meeting_date: "2026-02-26",
+        meeting_type: "Budget Council",
+        minute_ref: "107 (Main)",
+        title: "Substantive 2026/27 Council Revenue Budget, Capital Programme & 4.99% Council Tax Resolution",
+        category: "Budget & Finance",
+        proposer: "cllr-daniel-cowan",
+        seconder: "cllr-paul-collins",
+        outcome: "Passed",
+        source_url: "https://democracy.southend.gov.uk/mgAi.aspx?ID=20172",
+        summary: "Approval of the Joint Administration's £200.78M General Fund revenue budget, Capital Investment Programme, and a 4.99% Council Tax increase (2.99% general + 2.00% Adult Social Care precept).",
+        tally: { for: 31, against: 14, abstain: 1, no_vote: 0, absent: 5 },
+        votes: {
+          "cllr-sam-allen": "for", "cllr-stuart-allen": "for", "cllr-stephen-aylen": "for", "cllr-margaret-borton": "for",
+          "cllr-laurie-burton": "for", "cllr-paul-collins": "for", "cllr-daniel-cowan": "for", "cllr-matt-dent": "for",
+          "cllr-madison-faulkner-hatt": "for", "cllr-irene-ferguson": "for", "cllr-ian-gilbert": "for", "cllr-lydia-hyde": "for",
+          "cllr-anne-jones": "for", "cllr-pamela-kinsella": "for", "cllr-richard-longstaff": "for", "cllr-robert-mcmullan": "for",
+          "cllr-carole-mulroney": "for", "cllr-kathy-murphy": "for", "cllr-shahid-nadeem": "for", "cllr-cheryl-nevin": "for",
+          "cllr-jane-norman": "for", "cllr-mandy-oconnor": "for", "cllr-dave-poulton": "for", "cllr-donna-richardson": "for",
+          "cllr-kevin-robinson": "for", "cllr-maxine-sadza": "for", "cllr-martin-terry": "for", "cllr-steven-wakefield": "for",
+          "cllr-nick-ward": "for", "cllr-chris-webster": "for", "cllr-ron-woodley": "for",
+          "cllr-colin-campbell": "against", "cllr-owen-cartey": "against", "cllr-james-courtenay": "against",
+          "cllr-tony-cox": "against", "cllr-meg-davidson": "against", "cllr-alan-dear": "against",
+          "cllr-david-garston": "against", "cllr-stephen-habermel": "against", "cllr-john-harland": "against",
+          "cllr-darryl-jones": "against", "cllr-james-moyies": "against", "cllr-daniel-nelson": "against",
+          "cllr-lesley-salter": "against", "cllr-jack-warren": "against",
+          "cllr-nigel-folkard": "abstain",
+          "cllr-martin-berry": "absent", "cllr-susan-badger": "absent", "cllr-kevin-buck": "absent",
+          "cllr-fiona-evans": "absent", "cllr-judith-mcmahon": "absent"
+        }
+      },
+      {
+        id: "motion-2026-02-26-min107-amd3",
+        meeting_date: "2026-02-26",
+        meeting_type: "Budget Council",
+        minute_ref: "107 (Amendment 3)",
+        title: "2026/27 Budget Amendment 3 (Reform UK & Non-Aligned Opposition Amendment)",
+        category: "Budget & Finance",
+        proposer: "cllr-tony-cox",
+        seconder: "cllr-daniel-nelson",
+        outcome: "Rejected",
+        source_url: "https://democracy.southend.gov.uk/mgAi.aspx?ID=20172",
+        summary: "Alternative budget amendment proposed by Reform UK and Cllr Nelson. Triggered a three-way split inside the Conservative Group: 5 Conservatives voted For, 2 (Courtenay & Habermel) voted Against alongside the Administration, and 4 Abstained.",
+        tally: { for: 8, against: 33, abstain: 5, no_vote: 0, absent: 5 },
+        votes: {
+          "cllr-colin-campbell": "for", "cllr-owen-cartey": "for", "cllr-tony-cox": "for", "cllr-david-garston": "for",
+          "cllr-darryl-jones": "for", "cllr-james-moyies": "for", "cllr-daniel-nelson": "for", "cllr-jack-warren": "for",
+          "cllr-sam-allen": "against", "cllr-stuart-allen": "against", "cllr-stephen-aylen": "against", "cllr-margaret-borton": "against",
+          "cllr-laurie-burton": "against", "cllr-paul-collins": "against", "cllr-james-courtenay": "against", "cllr-daniel-cowan": "against",
+          "cllr-matt-dent": "against", "cllr-madison-faulkner-hatt": "against", "cllr-irene-ferguson": "against", "cllr-ian-gilbert": "against",
+          "cllr-stephen-habermel": "against", "cllr-lydia-hyde": "against", "cllr-anne-jones": "against", "cllr-pamela-kinsella": "against",
+          "cllr-richard-longstaff": "against", "cllr-robert-mcmullan": "against", "cllr-carole-mulroney": "against", "cllr-kathy-murphy": "against",
+          "cllr-shahid-nadeem": "against", "cllr-cheryl-nevin": "against", "cllr-jane-norman": "against", "cllr-mandy-oconnor": "against",
+          "cllr-dave-poulton": "against", "cllr-donna-richardson": "against", "cllr-kevin-robinson": "against", "cllr-maxine-sadza": "against",
+          "cllr-martin-terry": "against", "cllr-steven-wakefield": "against", "cllr-nick-ward": "against", "cllr-chris-webster": "against",
+          "cllr-ron-woodley": "against",
+          "cllr-nigel-folkard": "abstain", "cllr-meg-davidson": "abstain", "cllr-alan-dear": "abstain",
+          "cllr-john-harland": "abstain", "cllr-lesley-salter": "abstain",
+          "cllr-martin-berry": "absent", "cllr-susan-badger": "absent", "cllr-kevin-buck": "absent",
+          "cllr-fiona-evans": "absent", "cllr-judith-mcmahon": "absent"
+        }
+      },
+      {
+        id: "motion-2026-02-26-min107-amd2",
+        meeting_date: "2026-02-26",
+        meeting_type: "Budget Council",
+        minute_ref: "107 (Amendment 2)",
+        title: "2026/27 Budget Amendment 2 (Conservative Group Amendment 2)",
+        category: "Budget & Finance",
+        proposer: "cllr-james-courtenay",
+        seconder: "cllr-lesley-salter",
+        outcome: "Rejected",
+        source_url: "https://democracy.southend.gov.uk/mgAi.aspx?ID=20172",
+        summary: "Second Conservative Group budget amendment; supported by 10 Conservative members, opposed by the Joint Administration, Reform UK, and Conservative rebel Cllr Alan Dear.",
+        tally: { for: 10, against: 35, abstain: 1, no_vote: 0, absent: 5 },
+        votes: {
+          "cllr-colin-campbell": "for", "cllr-owen-cartey": "for", "cllr-james-courtenay": "for", "cllr-meg-davidson": "for",
+          "cllr-david-garston": "for", "cllr-stephen-habermel": "for", "cllr-john-harland": "for", "cllr-james-moyies": "for",
+          "cllr-lesley-salter": "for", "cllr-jack-warren": "for",
+          "cllr-sam-allen": "against", "cllr-stuart-allen": "against", "cllr-stephen-aylen": "against", "cllr-margaret-borton": "against",
+          "cllr-laurie-burton": "against", "cllr-paul-collins": "against", "cllr-daniel-cowan": "against", "cllr-tony-cox": "against",
+          "cllr-alan-dear": "against", "cllr-matt-dent": "against", "cllr-madison-faulkner-hatt": "against", "cllr-irene-ferguson": "against",
+          "cllr-ian-gilbert": "against", "cllr-lydia-hyde": "against", "cllr-anne-jones": "against", "cllr-darryl-jones": "against",
+          "cllr-pamela-kinsella": "against", "cllr-richard-longstaff": "against", "cllr-robert-mcmullan": "against", "cllr-carole-mulroney": "against",
+          "cllr-kathy-murphy": "against", "cllr-shahid-nadeem": "against", "cllr-daniel-nelson": "against", "cllr-cheryl-nevin": "against",
+          "cllr-jane-norman": "against", "cllr-mandy-oconnor": "against", "cllr-dave-poulton": "against", "cllr-donna-richardson": "against",
+          "cllr-kevin-robinson": "against", "cllr-maxine-sadza": "against", "cllr-martin-terry": "against", "cllr-steven-wakefield": "against",
+          "cllr-nick-ward": "against", "cllr-chris-webster": "against", "cllr-ron-woodley": "against",
+          "cllr-nigel-folkard": "abstain",
+          "cllr-martin-berry": "absent", "cllr-susan-badger": "absent", "cllr-kevin-buck": "absent",
+          "cllr-fiona-evans": "absent", "cllr-judith-mcmahon": "absent"
+        }
+      },
+      {
+        id: "motion-2026-02-26-min107-amd1",
+        meeting_date: "2026-02-26",
+        meeting_type: "Budget Council",
+        minute_ref: "107 (Amendment 1)",
+        title: "2026/27 Budget Amendment 1 (Primary Conservative Opposition Budget Amendment)",
+        category: "Budget & Finance",
+        proposer: "cllr-james-courtenay",
+        seconder: "cllr-lesley-salter",
+        outcome: "Rejected",
+        source_url: "https://democracy.southend.gov.uk/mgAi.aspx?ID=20172",
+        summary: "Official Conservative Opposition budget amendment; backed by all 11 voting Conservative members, opposed by the Joint Administration (Labour, Lib Dem, RSE Independents), Greens, and Reform UK.",
+        tally: { for: 11, against: 34, abstain: 1, no_vote: 0, absent: 5 },
+        votes: {
+          "cllr-colin-campbell": "for", "cllr-owen-cartey": "for", "cllr-james-courtenay": "for", "cllr-meg-davidson": "for",
+          "cllr-alan-dear": "for", "cllr-david-garston": "for", "cllr-stephen-habermel": "for", "cllr-john-harland": "for",
+          "cllr-james-moyies": "for", "cllr-lesley-salter": "for", "cllr-jack-warren": "for",
+          "cllr-sam-allen": "against", "cllr-stuart-allen": "against", "cllr-stephen-aylen": "against", "cllr-margaret-borton": "against",
+          "cllr-laurie-burton": "against", "cllr-paul-collins": "against", "cllr-daniel-cowan": "against", "cllr-tony-cox": "against",
+          "cllr-matt-dent": "against", "cllr-madison-faulkner-hatt": "against", "cllr-irene-ferguson": "against", "cllr-ian-gilbert": "against",
+          "cllr-lydia-hyde": "against", "cllr-anne-jones": "against", "cllr-darryl-jones": "against", "cllr-pamela-kinsella": "against",
+          "cllr-richard-longstaff": "against", "cllr-robert-mcmullan": "against", "cllr-carole-mulroney": "against", "cllr-kathy-murphy": "against",
+          "cllr-shahid-nadeem": "against", "cllr-daniel-nelson": "against", "cllr-cheryl-nevin": "against", "cllr-jane-norman": "against",
+          "cllr-mandy-oconnor": "against", "cllr-dave-poulton": "against", "cllr-donna-richardson": "against", "cllr-kevin-robinson": "against",
+          "cllr-maxine-sadza": "against", "cllr-martin-terry": "against", "cllr-steven-wakefield": "against", "cllr-nick-ward": "against",
+          "cllr-chris-webster": "against", "cllr-ron-woodley": "against",
+          "cllr-nigel-folkard": "abstain",
+          "cllr-martin-berry": "absent", "cllr-susan-badger": "absent", "cllr-kevin-buck": "absent",
+          "cllr-fiona-evans": "absent", "cllr-judith-mcmahon": "absent"
+        }
+      }
+    ];
+
+    /* =========================================================================
+       3. STATE MANAGEMENT & PARTY METADATA HELPERS
+       ========================================================================= */
+    const STORAGE_KEY_MOTIONS = "southend_votewatch_motions_v1";
+    let councillors = [...INITIAL_COUNCILLORS];
+    let motions = [];
+    let cllrMap = {};
+    let selectedCllrId = "cllr-daniel-cowan";
+    let lastParsedMotionObj = null;
+    let manualTokenOverrides = {};
+
+    const PARTY_META = {
+      "Labour Group": { short: "LAB", cls: "bg-lab", color: "#e4003b" },
+      "Conservative Group": { short: "CON", cls: "bg-con", color: "#0087dc" },
+      "Reform UK Group": { short: "REF", cls: "bg-ref", color: "#12b6cf" },
+      "Liberal Democrat Group": { short: "LD", cls: "bg-ld", color: "#faa61a" },
+      "Green Group": { short: "GRN", cls: "bg-grn", color: "#00b140" },
+      "Rochford & Southend East Independents Group": { short: "RSE IND", cls: "bg-ind", color: "#8b5cf6" },
+      "Not Aligned": { short: "IND", cls: "bg-non", color: "#64748b" }
+    };
+
+    function initApp() {
+      councillors.forEach(c => { cllrMap[c.id] = c; });
+
+      // Load motions from localStorage or seed with initial 5
+      const saved = localStorage.getItem(STORAGE_KEY_MOTIONS);
+      if (saved) {
+        try {
+          motions = JSON.parse(saved);
+        } catch (e) {
+          motions = [...INITIAL_MOTIONS];
+        }
+      } else {
+        motions = [...INITIAL_MOTIONS];
+      }
+
+      populateDyadDropdowns();
+      refreshAllViews();
+    }
+
+    function refreshAllViews() {
+      updateHeaderStats();
+      renderMotions();
+      renderDyadComparison();
+      renderRebelLeaderboard();
+      renderPartyMatrix();
+      renderCllrDirectory();
+      renderCllrDossier(selectedCllrId);
+    }
+
+    function switchTab(lensName, btnEl) {
+      document.querySelectorAll('.lens-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('lens-' + lensName).classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
+    }
+
+    function jumpToCouncillorDossier(cllrId) {
+      selectedCllrId = cllrId;
+      const tabs = document.querySelectorAll('.nav-tab');
+      switchTab('dossiers', tabs[2]);
+      renderCllrDirectory();
+      renderCllrDossier(cllrId);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =========================================================================
+       4. ANALYTICAL ENGINE: PARTY WHIP PLURALITY & REBEL DETECTION
+       ========================================================================= */
+    // Calculates the majority/plurality position of each party group on a given motion
+    function computePartySplitsForMotion(motion) {
+      const groupCounts = {};
+      Object.keys(PARTY_META).forEach(g => {
+        groupCounts[g] = { for: 0, against: 0, abstain: 0, no_vote: 0, absent: 0, activeTotal: 0, majorityVote: null, isSplit: false };
+      });
+
+      for (const [cid, vote] of Object.entries(motion.votes)) {
+        const c = cllrMap[cid];
+        if (!c) continue;
+        const g = groupCounts[c.group];
+        if (!g) continue;
+        if (g[vote] !== undefined) g[vote]++;
+        if (vote === "for" || vote === "against") {
+          g.activeTotal++;
+        }
+      }
+
+      // Determine party line (plurality between 'for' and 'against')
+      for (const [groupName, stats] of Object.entries(groupCounts)) {
+        if (groupName === "Not Aligned") continue; // Non-aligned independents don't have a party whip
+        if (stats.for > stats.against && stats.for > 0) {
+          stats.majorityVote = "for";
+        } else if (stats.against > stats.for && stats.against > 0) {
+          stats.majorityVote = "against";
+        } else if (stats.for > 0 && stats.for === stats.against) {
+          stats.majorityVote = "tied";
+        }
+
+        // Flag if members of a whipped group voted in opposite directions (For vs Against, or substantive Abstain split)
+        const activeDirections = [stats.for > 0, stats.against > 0, (stats.abstain > 1 && stats.activeTotal > 0)].filter(Boolean).length;
+        if (activeDirections > 1 && (stats.for + stats.against) >= 2) {
+          stats.isSplit = true;
+        }
+      }
+
+      return groupCounts;
+    }
+
+    // Checks if a specific councillor rebelled against their party group's majority on a motion
+    function isRebelVote(cllrId, motion, precomputedSplits = null) {
+      const c = cllrMap[cllrId];
+      if (!c || c.group === "Not Aligned") return false;
+      // Exclude Mayor Nigel Folkard's customary presiding abstention in 2025/26
+      if (cllrId === "cllr-nigel-folkard" && motion.votes[cllrId] === "abstain") return false;
+
+      const splits = precomputedSplits || computePartySplitsForMotion(motion);
+      const gStats = splits[c.group];
+      if (!gStats || !gStats.majorityVote || (gStats.for + gStats.against) < 2) return false;
+
+      const v = motion.votes[cllrId];
+      if (v !== "for" && v !== "against" && v !== "abstain") return false;
+
+      if (gStats.majorityVote === "tied") return true;
+      // If party voted For/Against and member voted the opposite (or abstained during a 3-way split)
+      if ((v === "for" || v === "against") && v !== gStats.majorityVote) return true;
+      if (v === "abstain" && gStats.isSplit && (gStats.for + gStats.against >= 4)) return true;
+      return false;
+    }
+
+    function updateHeaderStats() {
+      const activeCount = councillors.filter(c => c.status !== "former").length;
+      document.getElementById("stat-active-seats").textContent = activeCount;
+      document.getElementById("stat-total-cllrs").textContent = councillors.length;
+      document.getElementById("stat-total-motions").textContent = motions.length;
+      document.getElementById("tab-count-motions").textContent = motions.length;
+      document.getElementById("tab-count-cllrs").textContent = councillors.length;
+
+      let totalRebelInstances = 0;
+      motions.forEach(m => {
+        const splits = computePartySplitsForMotion(m);
+        Object.keys(m.votes).forEach(cid => {
+          if (isRebelVote(cid, m, splits)) totalRebelInstances++;
+        });
+      });
+      document.getElementById("stat-rebel-count").textContent = totalRebelInstances;
+    }
+
+    /* =========================================================================
+       5. LENS 1 RENDERER: MOTION / VOTE EXPLORER
+       ========================================================================= */
+    function renderMotions() {
+      const search = document.getElementById("motion-search").value.trim().toLowerCase();
+      const catFilter = document.getElementById("motion-cat-filter").value;
+      const outFilter = document.getElementById("motion-outcome-filter").value;
+      const container = document.getElementById("motions-list-container");
+
+      const filtered = motions.filter(m => {
+        if (catFilter !== "ALL" && m.category !== catFilter) return false;
+        if (outFilter === "Passed" && m.outcome !== "Passed") return false;
+        if (outFilter === "Rejected" && m.outcome !== "Rejected") return false;
+
+        const splits = computePartySplitsForMotion(m);
+        const hasRebel = Object.values(splits).some(s => s.isSplit);
+        if (outFilter === "REBEL" && !hasRebel) return false;
+
+        if (search) {
+          const hay = `${m.title} ${m.summary} ${m.meeting_date} ${m.minute_ref}`.toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="panel-card" style="text-align:center; padding:2.5rem; color:var(--text-muted);">No recorded divisions match your current filters.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map((m, idx) => {
+        const splits = computePartySplitsForMotion(m);
+        const totalSeats = (m.tally.for + m.tally.against + m.tally.abstain + m.tally.no_vote + m.tally.absent) || 51;
+        const pFor = ((m.tally.for / totalSeats) * 100).toFixed(1);
+        const pAgainst = ((m.tally.against / totalSeats) * 100).toFixed(1);
+        const pAbstain = ((m.tally.abstain / totalSeats) * 100).toFixed(1);
+        const pNoVote = ((m.tally.no_vote / totalSeats) * 100).toFixed(1);
+        const pAbsent = ((m.tally.absent / totalSeats) * 100).toFixed(1);
+
+        const proposerObj = cllrMap[m.proposer];
+        const seconderObj = cllrMap[m.seconder];
+
+        // Build Party Split Pills
+        const partyPillsHtml = Object.entries(splits)
+          .filter(([_, s]) => (s.for + s.against + s.abstain + s.no_vote) > 0)
+          .map(([gName, s]) => {
+            const meta = PARTY_META[gName];
+            const parts = [];
+            if (s.for > 0) parts.push(`<span style="color:#15803d;font-weight:700;">${s.for}F</span>`);
+            if (s.against > 0) parts.push(`<span style="color:#b91c1c;font-weight:700;">${s.against}A</span>`);
+            if (s.abstain > 0) parts.push(`<span style="color:#b45309;font-weight:700;">${s.abstain}Abs</span>`);
+            if (s.no_vote > 0) parts.push(`<span style="color:#6d28d9;font-weight:700;">${s.no_vote}NV</span>`);
+            return `
+              <div class="party-split-pill ${s.isSplit ? 'split-alert' : ''}" title="${gName}">
+                <span class="party-dot ${meta.cls}"></span>
+                <strong>${meta.short}:</strong> ${parts.join(' / ')}
+                ${s.isSplit ? '<span class="rebel-tag">⚡ SPLIT</span>' : ''}
+              </div>
+            `;
+          }).join('');
+
+        // Build 5-column voter breakdown for inspection drawer
+        const buckets = [
+          { key: "for", label: "For", count: m.tally.for, color: "#16a34a" },
+          { key: "against", label: "Against", count: m.tally.against, color: "#dc2626" },
+          { key: "abstain", label: "Abstain", count: m.tally.abstain, color: "#d97706" },
+          { key: "no_vote", label: "No Vote", count: m.tally.no_vote, color: "#7c3aed" },
+          { key: "absent", label: "Absent", count: m.tally.absent, color: "#64748b" }
+        ];
+
+        const colsHtml = buckets.filter(b => b.count > 0).map(b => {
+          const voters = Object.entries(m.votes)
+            .filter(([_, v]) => v === b.key)
+            .map(([cid]) => cllrMap[cid] || { id: cid, name: cid, group: "Not Aligned", ward: "" })
+            .sort((a, bObj) => a.name.localeCompare(bObj.name));
+
+          const listItems = voters.map(c => {
+            const pMeta = PARTY_META[c.group] || PARTY_META["Not Aligned"];
+            const rebel = isRebelVote(c.id, m, splits);
+            return `
+              <li class="voter-item" onclick="event.stopPropagation(); jumpToCouncillorDossier('${c.id}')">
+                <span>
+                  <span class="party-dot ${pMeta.cls}" style="margin-right:4px;"></span>
+                  <strong>${c.name}</strong>
+                  ${rebel ? '<span class="rebel-tag" title="Voted against party group plurality">Rebel</span>' : ''}
+                </span>
+                <span style="font-size:0.7rem; color:var(--text-light);">${pMeta.short}</span>
+              </li>
+            `;
+          }).join('');
+
+          return `
+            <div class="division-col">
+              <h4 style="border-bottom-color:${b.color};">
+                <span>${b.label}</span>
+                <span style="font-family:'JetBrains Mono',monospace;">${b.count}</span>
+              </h4>
+              <ul class="voter-list">${listItems}</ul>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <article class="motion-card ${idx === 0 ? 'expanded' : ''}" id="card-${m.id}">
+            <div class="motion-card-header" onclick="document.getElementById('card-${m.id}').classList.toggle('expanded')">
+              <div class="motion-meta-row">
+                <div class="motion-tags">
+                  <span class="tag-badge">📅 ${m.meeting_date}</span>
+                  <span class="tag-badge">${m.meeting_type} (Min ${m.minute_ref})</span>
+                  <span class="tag-badge">${m.category}</span>
+                  ${proposerObj ? `<span class="tag-badge">Proposed: Cllr ${proposerObj.name}</span>` : ''}
+                  ${seconderObj ? `<span class="tag-badge">Seconded: Cllr ${seconderObj.name}</span>` : ''}
+                </div>
+                <span class="outcome-badge ${m.outcome === 'Passed' ? 'outcome-passed' : 'outcome-rejected'}">
+                  ${m.outcome} (${m.tally.for}–${m.tally.against})
+                </span>
+              </div>
+
+              <h2 class="motion-title">${m.title}</h2>
+              <p class="motion-summary">${m.summary}</p>
+
+              <div class="vote-bar-wrap">
+                <div class="vote-bar-labels">
+                  <span style="color:var(--vote-for);">● For: ${m.tally.for}</span>
+                  <span style="color:var(--vote-against);">● Against: ${m.tally.against}</span>
+                  <span style="color:var(--vote-abstain);">● Abstain: ${m.tally.abstain}</span>
+                  <span style="color:var(--vote-novote);">● No Vote: ${m.tally.no_vote}</span>
+                  <span style="color:var(--vote-absent);">● Absent: ${m.tally.absent}</span>
+                </div>
+                <div class="vote-bar-track">
+                  <div class="bar-seg-for" style="width:${pFor}%"></div>
+                  <div class="bar-seg-against" style="width:${pAgainst}%"></div>
+                  <div class="bar-seg-abstain" style="width:${pAbstain}%"></div>
+                  <div class="bar-seg-no_vote" style="width:${pNoVote}%"></div>
+                  <div class="bar-seg-absent" style="width:${pAbsent}%"></div>
+                </div>
+              </div>
+
+              <div class="party-splits-grid">
+                ${partyPillsHtml}
+                <span style="margin-left:auto; font-size:0.76rem; color:var(--accent); font-weight:600; align-self:center;">
+                  Click card to inspect all 51 names ▾
+                </span>
+              </div>
+            </div>
+
+            <div class="motion-details">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">
+                  Full Recorded Division Roster (Click any councillor to open their dossier)
+                </span>
+                ${m.source_url ? `<a href="${m.source_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🔗 Official Southend Council Minutes</a>` : ''}
+              </div>
+              <div class="division-columns">${colsHtml}</div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    /* =========================================================================
+       6. LENS 2 RENDERER: ALIGNMENT & REBELS MATRIX
+       ========================================================================= */
+    function populateDyadDropdowns() {
+      const selA = document.getElementById("dyad-cllr-a");
+      const selB = document.getElementById("dyad-cllr-b");
+      const sorted = [...councillors].sort((a, b) => a.name.localeCompare(b.name));
+
+      const opts = sorted.map(c => {
+        const meta = PARTY_META[c.group] || PARTY_META["Not Aligned"];
+        return `<option value="${c.id}">${c.name} (${meta.short} — ${c.ward})</option>`;
+      }).join('');
+
+      selA.innerHTML = opts;
+      selB.innerHTML = opts;
+      // Default to an interesting comparison: Sam Allen (Labour) vs Daniel Cowan (Labour Leader)
+      selA.value = "cllr-sam-allen";
+      selB.value = "cllr-paul-collins";
+    }
+
+    function renderDyadComparison() {
+      const idA = document.getElementById("dyad-cllr-a").value;
+      const idB = document.getElementById("dyad-cllr-b").value;
+      const cA = cllrMap[idA];
+      const cB = cllrMap[idB];
+      const container = document.getElementById("dyad-results-container");
+      if (!cA || !cB) return;
+
+      let bothPresent = 0;
+      let exactAgreements = 0;
+      const rowsHtml = motions.map(m => {
+        const vA = m.votes[idA] || "not_in_office";
+        const vB = m.votes[idB] || "not_in_office";
+        const activeVotes = ["for", "against", "abstain", "no_vote"];
+        let statusCell = `<span style="color:var(--text-light);">N/A (Absent or Not in Seat)</span>`;
+
+        if (activeVotes.includes(vA) && activeVotes.includes(vB)) {
+          bothPresent++;
+          if (vA === vB) {
+            exactAgreements++;
+            statusCell = `<span style="color:#15803d; font-weight:700;">✓ Agreed (${vA.toUpperCase()})</span>`;
+          } else {
+            statusCell = `<span style="color:#b91c1c; font-weight:700;">✗ Diverged</span>`;
+          }
+        }
+
+        return `
+          <tr>
+            <td><strong>${m.meeting_date}</strong> (Min ${m.minute_ref})</td>
+            <td>${m.title}</td>
+            <td><span class="vote-pill vote-${vA}">${vA.replace('_', ' ')}</span></td>
+            <td><span class="vote-pill vote-${vB}">${vB.replace('_', ' ')}</span></td>
+            <td>${statusCell}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const pct = bothPresent > 0 ? Math.round((exactAgreements / bothPresent) * 100) : 0;
+
+      container.innerHTML = `
+        <div class="dyad-score-banner">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; text-transform:uppercase; color:var(--primary);">
+              Voting Alignment Index: ${cA.name} & ${cB.name}
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;">
+              Voted identically in <strong>${exactAgreements}</strong> out of <strong>${bothPresent}</strong> shared active divisions.
+            </div>
+          </div>
+          <div class="dyad-big-pct">${pct}%</div>
+        </div>
+        <div class="matrix-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Division</th>
+                <th>${cA.name}</th>
+                <th>${cB.name}</th>
+                <th>Comparison</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderRebelLeaderboard() {
+      const tbody = document.querySelector("#rebel-leaderboard-table tbody");
+      const statsList = [];
+
+      councillors.forEach(c => {
+        if (c.group === "Not Aligned") return;
+        let activeVotes = 0;
+        let rebellions = 0;
+        let rebelMotions = [];
+
+        motions.forEach(m => {
+          const v = m.votes[c.id];
+          if (v === "for" || v === "against" || v === "abstain") {
+            activeVotes++;
+            if (isRebelVote(c.id, m)) {
+              rebellions++;
+              rebelMotions.push(`${m.meeting_date} (${m.minute_ref}: ${v.toUpperCase()})`);
+            }
+          }
+        });
+
+        if (rebellions > 0) {
+          const loyalty = activeVotes > 0 ? Math.round(((activeVotes - rebellions) / activeVotes) * 100) : 100;
+          statsList.push({ cllr: c, activeVotes, rebellions, loyalty, rebelMotions });
+        }
+      });
+
+      statsList.sort((a, b) => b.rebellions - a.rebellions || a.loyalty - b.loyalty);
+
+      if (statsList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5">No whip deviations detected.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = statsList.map(item => {
+        const meta = PARTY_META[item.cllr.group];
+        return `
+          <tr style="cursor:pointer;" onclick="jumpToCouncillorDossier('${item.cllr.id}')">
+            <td><strong>${item.cllr.name}</strong> <span style="font-size:0.72rem; color:var(--text-light);">(${item.cllr.ward})</span></td>
+            <td><span class="party-badge ${meta.cls}">${meta.short}</span></td>
+            <td style="font-family:'JetBrains Mono',monospace; font-weight:700;">${item.loyalty}%</td>
+            <td><span class="rebel-tag">${item.rebellions} / ${item.activeVotes}</span></td>
+            <td style="font-size:0.76rem; color:var(--text-muted);">${item.rebelMotions.join(', ')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPartyMatrix() {
+      const groups = [
+        "Labour Group",
+        "Liberal Democrat Group",
+        "Rochford & Southend East Independents Group",
+        "Green Group",
+        "Conservative Group",
+        "Reform UK Group"
+      ];
+
+      // Precompute group majorities per motion
+      const motionSplits = motions.map(m => computePartySplitsForMotion(m));
+
+      let html = `<table class="data-table"><thead><tr><th>Group</th>`;
+      groups.forEach(g => {
+        html += `<th style="text-align:center;">${PARTY_META[g].short}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      groups.forEach(gA => {
+        const metaA = PARTY_META[gA];
+        html += `<tr><td><span class="party-badge ${metaA.cls}">${metaA.short}</span></td>`;
+        groups.forEach(gB => {
+          if (gA === gB) {
+            html += `<td class="heat-cell" style="background:#f1f5f9; color:#64748b;">100%</td>`;
+            return;
+          }
+          let shared = 0;
+          let agreed = 0;
+          motionSplits.forEach(s => {
+            const majA = s[gA]?.majorityVote;
+            const majB = s[gB]?.majorityVote;
+            if ((majA === "for" || majA === "against") && (majB === "for" || majB === "against")) {
+              shared++;
+              if (majA === majB) agreed++;
+            }
+          });
+          const pct = shared > 0 ? Math.round((agreed / shared) * 100) : 0;
+          const bg = pct >= 75 ? '#dcfce7' : pct >= 40 ? '#fef9c3' : '#fee2e2';
+          const col = pct >= 75 ? '#166534' : pct >= 40 ? '#854d0e' : '#991b1b';
+          html += `<td class="heat-cell" style="background:${bg}; color:${col};">${pct}%</td>`;
+        });
+        html += `</tr>`;
+      });
+
+      html += `</tbody></table>`;
+      document.getElementById("party-matrix-container").innerHTML = html;
+    }
+
+    /* =========================================================================
+       7. LENS 3 RENDERER: COUNCILLOR DOSSIERS
+       ========================================================================= */
+    function renderCllrDirectory() {
+      const q = document.getElementById("cllr-search").value.trim().toLowerCase();
+      const partyFilter = document.getElementById("cllr-party-filter").value;
+      const statusFilter = document.getElementById("cllr-status-filter").value;
+      const listEl = document.getElementById("cllr-directory-list");
+
+      const filtered = councillors.filter(c => {
+        if (partyFilter !== "ALL" && c.group !== partyFilter) return false;
+        if (statusFilter === "CURRENT" && c.status === "former") return false;
+        if (statusFilter === "former" && c.status !== "former") return false;
+        if (q) {
+          const hay = `${c.name} ${c.ward} ${c.party} ${c.roles.join(' ')}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      }).sort((a, b) => a.name.localeCompare(b.name));
+
+      listEl.innerHTML = filtered.map(c => {
+        const meta = PARTY_META[c.group] || PARTY_META["Not Aligned"];
+        const isSel = c.id === selectedCllrId;
+        return `
+          <div class="cllr-list-item ${isSel ? 'selected' : ''}" onclick="selectedCllrId='${c.id}'; renderCllrDirectory(); renderCllrDossier('${c.id}')">
+            <div class="cllr-name-block">
+              <div class="name">${c.name}</div>
+              <div class="sub">${c.ward} Ward • ${c.status === 'former' ? 'Former (2024–26)' : 'Term ends ' + c.term_ends}</div>
+            </div>
+            <span class="party-badge ${meta.cls}">${meta.short}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCllrDossier(cllrId) {
+      const c = cllrMap[cllrId] || councillors[0];
+      const pane = document.getElementById("cllr-dossier-detail");
+      const meta = PARTY_META[c.group] || PARTY_META["Not Aligned"];
+
+      let eligible = 0, presentCount = 0, forCount = 0, againstCount = 0, abstainCount = 0, noVoteCount = 0, absentCount = 0, rebellions = 0;
+
+      const historyRows = motions.map(m => {
+        const v = m.votes[c.id];
+        if (!v) {
+          return `
+            <tr>
+              <td>${m.meeting_date}</td>
+              <td>${m.title}</td>
+              <td><span class="tag-badge">Not in seat at time of division</span></td>
+              <td>—</td>
+            </tr>
+          `;
+        }
+        eligible++;
+        if (v === "for") { forCount++; presentCount++; }
+        if (v === "against") { againstCount++; presentCount++; }
+        if (v === "abstain") { abstainCount++; presentCount++; }
+        if (v === "no_vote") { noVoteCount++; presentCount++; }
+        if (v === "absent") { absentCount++; }
+
+        const splits = computePartySplitsForMotion(m);
+        const rebel = isRebelVote(c.id, m, splits);
+        if (rebel) rebellions++;
+        const grpMaj = splits[c.group]?.majorityVote;
+
+        return `
+          <tr>
+            <td><strong>${m.meeting_date}</strong><br><span style="font-size:0.72rem;color:var(--text-light);">Min ${m.minute_ref}</span></td>
+            <td>
+              <strong>${m.title}</strong>
+              <div style="font-size:0.75rem;color:var(--text-muted);">${m.category} • Outcome: ${m.outcome}</div>
+            </td>
+            <td>
+              <span class="vote-pill vote-${v}">${v.replace('_', ' ')}</span>
+              ${rebel ? '<div style="margin-top:4px;"><span class="rebel-tag">⚡ Rebel / Split</span></div>' : ''}
+            </td>
+            <td style="font-size:0.78rem; color:var(--text-muted);">
+              ${grpMaj ? `Group plurality: <strong>${grpMaj.toUpperCase()}</strong>` : 'Free / Non-Aligned'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const attendancePct = eligible > 0 ? Math.round((presentCount / eligible) * 100) : 0;
+      const activeCast = forCount + againstCount + abstainCount;
+      const loyaltyPct = (c.group !== "Not Aligned" && activeCast > 0)
+        ? Math.round(((activeCast - rebellions) / activeCast) * 100) + "%"
+        : "N/A";
+
+      pane.innerHTML = `
+        <div class="dossier-header">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.35rem;">
+              <h2 style="font-size:1.35rem; font-weight:800;">Cllr ${c.name}</h2>
+              <span class="party-badge ${meta.cls}">${c.party}</span>
+              <span class="status-pill status-${c.status}">${c.status}</span>
+            </div>
+            <div style="font-size:0.88rem; color:var(--text-muted);">
+              <strong>Ward:</strong> ${c.ward} &nbsp;|&nbsp;
+              <strong>Group:</strong> ${c.group} &nbsp;|&nbsp;
+              <strong>Minutes Alias:</strong> <code>${c.minute_alias}</code>
+            </div>
+            ${c.roles.length > 0 ? `<div style="margin-top:0.5rem; font-size:0.82rem; color:var(--primary); font-weight:600;">🏛 Roles: ${c.roles.join(' • ')}</div>` : ''}
+          </div>
+          <a href="https://democracy.southend.gov.uk/mgMemberIndex.aspx?bcr=1" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
+            Modern.Gov Profile ↗
+          </a>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="kpi-label">Division Attendance</div>
+            <div class="kpi-val">${attendancePct}%</div>
+            <div style="font-size:0.72rem; color:var(--text-light);">${presentCount} of ${eligible} divisions</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Group Loyalty</div>
+            <div class="kpi-val">${loyaltyPct}</div>
+            <div style="font-size:0.72rem; color:var(--text-light);">${rebellions} whip deviations</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">For / Against</div>
+            <div class="kpi-val" style="color:#15803d;">${forCount} <span style="color:#94a3b8;">/</span> <span style="color:#b91c1c;">${againstCount}</span></div>
+            <div style="font-size:0.72rem; color:var(--text-light);">Active directional votes</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Abstain / No Vote</div>
+            <div class="kpi-val">${abstainCount} <span style="color:#94a3b8;">/</span> ${noVoteCount}</div>
+            <div style="font-size:0.72rem; color:var(--text-light);">Absent: ${absentCount}</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.85rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.6rem;">
+          Recorded Division Chronology (${eligible} Tracked Votes)
+        </h4>
+        <div class="matrix-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date / Min</th>
+                <th>Motion / Amendment</th>
+                <th>Cllr Vote</th>
+                <th>Group Context</th>
+              </tr>
+            </thead>
+            <tbody>${historyRows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    /* =========================================================================
+       8. LENS 4: 5-STAGE MINUTE-TO-JSON DETERMINISTIC PARSER
+       ========================================================================= */
+    const PARSER_PRESETS = {
+      greenbelt: {
+        date: "2026-08-24",
+        minref: "42",
+        title: "Notice of Motion: Reaffirmation of the Existing Adopted Development Plan & Green Belt Protection",
+        category: "Green Belt & Planning",
+        outcome: "Passed",
+        summary: "Motion reaffirming the existing Adopted Development Plan and protecting Green Belt land in and around Southend.",
+        raw: `A requisition for a named vote having been made in accordance with Standing Order 3.44, the voting was as follows:\nFor: Councillors S W Allen, S Allen, Aylen, Badger, Berry, Bird, Campbell, Collins, Corrigan, Courtenay, Cox, Forde, Garston, Habermel, Harvey, Heaver, Darryl Jones, Longstaff, McMahon, McMullan, Mitchell, A Moyies, J Moyies, O'Rourke, Poulton, Salter, Dr Shaw, Wakefield, Warren, Watt and Woodley (31)\nAgainst: Councillors Borton, Dent, Madison Faulkner-Hatt, Gilbert, A Jones, Kinsella, Nevin, Norman, Robinson, Sadza and Webster (11)\nAbstentions: None (0)\nNo Vote: Councillors Cowan, Ferguson, Nadeem and O'Connor (4)\nAbsent for the vote: Councillors Bright, Cartey, Davidson, Richardson and Wood (5)`
+      },
+      simulated: {
+        date: "2026-11-26",
+        minref: "64",
+        title: "Notice of Motion: Winter Seafront Parking Tariff Freeze & Evening Concession Pass",
+        category: "Highways & Transport",
+        outcome: "Rejected",
+        summary: "Opposition motion calling for a freeze on winter seafront parking charges in Zones 1A; includes a deliberate clerk OCR typo ('Courteney') to demonstrate the interactive fallback matcher.",
+        raw: `For: Councillors Aylen, Badger, Berry, Bird, Bright, Campbell, Cartey, Corrigan, Courteney, Davidson, Garston, Habermel, Harvey, Heaver, Darryl Jones, McMahon, A Moyies, J Moyies, O'Rourke, Salter, Dr Shaw, Wakefield, Warren, Watt, Wood and Woodley (26)\nAgainst: Councillors S W Allen, S Allen, Borton, Collins, Cowan, Dent, Madison Faulkner-Hatt, Ferguson, Forde, Gilbert, A Jones, Kinsella, Longstaff, McMullan, Mitchell, Nadeem, Nevin, Norman, O'Connor, Poulton, Richardson, Robinson, Sadza and Webster (24)\nAbstentions: Councillor Cox (1)\nNo Vote: None (0)\nAbsent for the vote: None (0)`
+      }
+    };
+
+    function loadParserPreset(key) {
+      const p = PARSER_PRESETS[key];
+      if (!p) return;
+      manualTokenOverrides = {};
+      document.getElementById("parse-date").value = p.date;
+      document.getElementById("parse-minref").value = p.minref;
+      document.getElementById("parse-title").value = p.title;
+      document.getElementById("parse-category").value = p.category;
+      document.getElementById("parse-outcome").value = p.outcome;
+      document.getElementById("parse-summary").value = p.summary;
+      document.getElementById("parse-raw-text").value = p.raw;
+      runMinuteParser();
+    }
+
+    function normalizeAliasToken(str) {
+      return str
+        .replace(/[’‘]/g, "'")
+        .replace(/^(Councillors|Councillor|Cllrs|Cllr)\s+/i, "")
+        .replace(/\.$/, "")
+        .trim();
+    }
+
+    function matchCouncillorToken(token) {
+      if (manualTokenOverrides[token]) return manualTokenOverrides[token];
+      const clean = normalizeAliasToken(token).toLowerCase();
+      for (const c of councillors) {
+        if (c.aliases.some(a => a.toLowerCase() === clean)) {
+          return c.id;
+        }
+      }
+      return null;
+    }
+
+    function runMinuteParser() {
+      const raw = document.getElementById("parse-raw-text").value;
+      const diagBox = document.getElementById("parser-diagnostics-box");
+      const unmatchedBox = document.getElementById("parser-unmatched-box");
+      const previewEl = document.getElementById("parser-json-preview");
+      const saveBtn = document.getElementById("btn-save-parsed");
+
+      if (!raw.trim()) {
+        diagBox.innerHTML = "";
+        unmatchedBox.innerHTML = "";
+        previewEl.textContent = "// Paste council minutes on the left to begin...";
+        saveBtn.disabled = true;
+        return;
+      }
+
+      const bucketDefs = [
+        { key: "for", label: "For", regex: /^For\s*:/i },
+        { key: "against", label: "Against", regex: /^Against\s*:/i },
+        { key: "abstain", label: "Abstentions", regex: /^Abst(entions|ain)\s*:/i },
+        { key: "no_vote", label: "No Vote", regex: /^No\s+Vote\s*:/i },
+        { key: "absent", label: "Absent", regex: /^Absent(\s+for\s+the\s+vote)?\s*:/i }
+      ];
+
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const votesMap = {};
+      const tally = { for: 0, against: 0, abstain: 0, no_vote: 0, absent: 0 };
+      const diagnostics = [];
+      const unmatchedTokens = [];
+
+      bucketDefs.forEach(b => {
+        const line = lines.find(l => b.regex.test(l));
+        if (!line) return;
+
+        // Extract checksum (N) at end of line
+        const countMatch = line.match(/\((\d+)\)\s*\.?\s*$/);
+        const expectedCount = countMatch ? parseInt(countMatch[1], 10) : null;
+
+        // Strip prefix and trailing (N)
+        let body = line.replace(b.regex, "").replace(/\((\d+)\)\s*\.?\s*$/, "").trim();
+        body = body.replace(/^(Councillors|Councillor|Cllrs|Cllr)\s+/i, "").trim();
+
+        if (/^(None|Nil)\.?$/i.test(body) || body === "") {
+          tally[b.key] = 0;
+          diagnostics.push({ label: b.label, matched: 0, expected: expectedCount ?? 0, ok: true });
+          return;
+        }
+
+        // Convert ' and ' into comma and split
+        body = body.replace(/\s+and\s+/gi, ", ");
+        const tokens = body.split(",").map(t => normalizeAliasToken(t)).filter(Boolean);
+
+        let matchedInLine = 0;
+        tokens.forEach(tok => {
+          const cid = matchCouncillorToken(tok);
+          if (cid) {
+            votesMap[cid] = b.key;
+            matchedInLine++;
+          } else {
+            unmatchedTokens.push({ token: tok, bucket: b.key });
+          }
+        });
+
+        tally[b.key] = matchedInLine;
+        const isOk = expectedCount === null ? unmatchedTokens.length === 0 : (matchedInLine === expectedCount);
+        diagnostics.push({ label: b.label, matched: matchedInLine, expected: expectedCount, ok: isOk });
+      });
+
+      // Render Checksum Diagnostics
+      const totalMatched = Object.keys(votesMap).length;
+      diagBox.innerHTML = diagnostics.map(d => `
+        <div class="checksum-row ${d.ok ? 'checksum-ok' : 'checksum-warn'}">
+          <span>${d.ok ? '✓' : '⚠'} <strong>${d.label}</strong></span>
+          <span style="font-family:'JetBrains Mono',monospace;">
+            Matched: ${d.matched} ${d.expected !== null ? `/ Clerk Checksum: (${d.expected})` : ''}
+          </span>
+        </div>
+      `).join('') + `
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.35rem; font-family:'JetBrains Mono',monospace;">
+          Chamber Total Mapped: <strong>${totalMatched}</strong> councillors
+        </div>
+      `;
+
+      // Render Unmatched Fallback Resolver if any OCR typos exist
+      if (unmatchedTokens.length > 0) {
+        const sortedCllrs = [...councillors].sort((a, b) => a.name.localeCompare(b.name));
+        unmatchedBox.innerHTML = `
+          <div class="unmatched-card">
+            <div style="font-weight:700; color:#92400e; margin-bottom:0.4rem;">
+              ⚠ ${unmatchedTokens.length} Unrecognised Name / OCR Typo Detected
+            </div>
+            <p style="font-size:0.76rem; color:#78350f; margin-bottom:0.6rem;">
+              Link the unrecognized token below to a councillor to complete the checksum:
+            </p>
+            ${unmatchedTokens.map(u => `
+              <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.4rem;">
+                <code style="background:#fff; padding:0.2rem 0.5rem; border-radius:4px; border:1px solid #fcd34d; font-weight:700;">"${u.token}" (${u.bucket.toUpperCase()})</code>
+                <span>→</span>
+                <select onchange="manualTokenOverrides['${u.token.replace(/'/g, "\\'")}'] = this.value; runMinuteParser();">
+                  <option value="">-- Select Councillor --</option>
+                  ${sortedCllrs.map(c => `<option value="${c.id}">${c.name} (${c.ward})</option>`).join('')}
+                </select>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        unmatchedBox.innerHTML = "";
+      }
+
+      const dateVal = document.getElementById("parse-date").value || "2026-10-15";
+      const minRef = document.getElementById("parse-minref").value.trim() || "XX";
+
+      lastParsedMotionObj = {
+        id: `motion-${dateVal}-min${minRef.replace(/\W+/g, '').toLowerCase()}`,
+        meeting_date: dateVal,
+        meeting_type: "Council",
+        minute_ref: minRef,
+        title: document.getElementById("parse-title").value.trim() || "Untitled Recorded Division",
+        category: document.getElementById("parse-category").value,
+        proposer: "",
+        seconder: "",
+        outcome: document.getElementById("parse-outcome").value,
+        source_url: "https://democracy.southend.gov.uk/",
+        summary: document.getElementById("parse-summary").value.trim() || "Parsed via Southend VoteWatch Minute-to-JSON tool.",
+        tally,
+        votes: votesMap
+      };
+
+      previewEl.textContent = JSON.stringify(lastParsedMotionObj, null, 2);
+      saveBtn.disabled = totalMatched === 0 || unmatchedTokens.length > 0;
+    }
+
+    function saveParsedMotionToApp() {
+      if (!lastParsedMotionObj) return;
+      const existingIdx = motions.findIndex(m => m.id === lastParsedMotionObj.id);
+      if (existingIdx >= 0) {
+        motions[existingIdx] = lastParsedMotionObj;
+      } else {
+        motions.unshift(lastParsedMotionObj);
+      }
+      localStorage.setItem(STORAGE_KEY_MOTIONS, JSON.stringify(motions));
+      refreshAllViews();
+      const tabs = document.querySelectorAll('.nav-tab');
+      switchTab('motions', tabs[0]);
+    }
+
+    function copyParsedJson() {
+      if (!lastParsedMotionObj) return;
+      navigator.clipboard.writeText(JSON.stringify(lastParsedMotionObj, null, 2));
+      alert("Motion JSON copied to clipboard!");
+    }
+
+    function exportFullDatabase() {
+      const payload = {
+        exported_at: new Date().toISOString(),
+        council: "Southend-on-Sea City Council",
+        councillors,
+        motions
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `southend-council-votewatch-data-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>

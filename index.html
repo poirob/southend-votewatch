@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Southend Council VoteWatch</title>
+
+  <!-- PWA & Standalone Mobile Meta Tags -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="VoteWatch" />
+  <link id="apple-touch-icon-link" rel="apple-touch-icon" href="" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- PART 1 LINK: Modular Stylesheet -->
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- OVER-THE-AIR (OTA) LIVE UPDATE TOAST BANNER -->
+  <div class="update-toast" id="update-toast">
+    <span>⚡ New council votes or app updates available</span>
+    <button class="btn btn-install btn-sm" onclick="window.location.reload()">Tap to Refresh</button>
+  </div>
+
+  <!-- TOP CIVIC HEADER -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div class="header-top-row">
+        <div>
+          <div class="brand-title">
+            <span class="brand-badge">Southend-on-Sea</span>
+            <h1>Council VoteWatch</h1>
+          </div>
+          <p class="brand-subtitle">Standing Order 3.44 Recorded Divisions, Journalistic Briefings & StratMap Intelligence</p>
+        </div>
+
+        <div class="header-stats">
+          <div class="stat-pill">
+            <span class="label">Seats</span>
+            <span class="val" id="stat-active-seats">51</span>
+          </div>
+          <div class="stat-pill">
+            <span class="label">Votes</span>
+            <span class="val" id="stat-total-motions">5</span>
+          </div>
+          <div class="stat-pill hide-mobile">
+            <span class="label">Splits</span>
+            <span class="val" id="stat-rebel-count">0</span>
+          </div>
+          <button class="btn btn-install btn-sm" id="btn-install-app" onclick="handleInstallClick()">
+            📲 Use as App
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="exportFullDatabase()" title="Download Full Database JSON">
+            ⬇ JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- DESKTOP NAVIGATION TABS (5 LENSES) -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" data-lens="motions" onclick="switchTab('motions')">
+          1. Vote Explorer & Briefings <span class="tab-count" id="tab-count-motions">5</span>
+        </button>
+        <button class="nav-tab" data-lens="alignment" onclick="switchTab('alignment')">
+          2. Alignment & Coalition Matrix
+        </button>
+        <button class="nav-tab" data-lens="dossiers" onclick="switchTab('dossiers')">
+          3. Councillor Dossiers <span class="tab-count" id="tab-count-cllrs">63</span>
+        </button>
+        <button class="nav-tab" data-lens="stratmap" onclick="switchTab('stratmap')">
+          4. StratMap Ward Bridge <span class="tab-count">17 Wards</span>
+        </button>
+        <button class="nav-tab" data-lens="parser" onclick="switchTab('parser')">
+          5. Minute & Briefing Parser
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MOBILE FIXED BOTTOM TAB BAR (5 LENSES) -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <button class="mob-nav-btn active" data-lens="motions" onclick="switchTab('motions')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span>Briefings</span>
+    </button>
+    <button class="mob-nav-btn" data-lens="alignment" onclick="switchTab('alignment')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Matrix</span>
+    </button>
+    <button class="mob-nav-btn" data-lens="dossiers" onclick="switchTab('dossiers', false)">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Cllrs</span>
+    </button>
+    <button class="mob-nav-btn" data-lens="stratmap" onclick="switchTab('stratmap')">
+      <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      <span>StratMap</span>
+    </button>
+    <button class="mob-nav-btn" data-lens="parser" onclick="switchTab('parser')">
+      <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      <span>Parser</span>
+    </button>
+  </nav>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="main-container">
+
+    <!-- ==========================================
+         LENS 1: VOTE EXPLORER & JOURNALISTIC BRIEFINGS
+         ========================================== -->
+    <section id="lens-motions" class="lens-section active">
+      <div class="filter-bar">
+        <div class="search-row-mobile">
+          <div class="filter-group" style="flex: 2;">
+            <label for="motion-search">Search Motions, Briefings or Topics</label>
+            <input type="text" id="motion-search" placeholder="e.g. Green Belt, Budget, Wedge, Rebel..." oninput="renderMotions()" />
+          </div>
+          <button class="btn btn-secondary mobile-filter-toggle" onclick="toggleMobileFilters('motion-filters-collapse')">
+            ⚙ Filters
+          </button>
+        </div>
+        <div class="filter-collapsible" id="motion-filters-collapse">
+          <div class="filter-group">
+            <label for="motion-cat-filter">Policy Category</label>
+            <select id="motion-cat-filter" onchange="renderMotions()">
+              <option value="ALL">All Categories</option>
+              <option value="Green Belt & Planning">Green Belt & Planning</option>
+              <option value="Budget & Finance">Budget & Finance</option>
+              <option value="Highways & Transport">Highways & Transport</option>
+              <option value="Governance & Civic">Governance & Civic</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="motion-outcome-filter">Outcome / Split Filter</label>
+            <select id="motion-outcome-filter" onchange="renderMotions()">
+              <option value="ALL">All Outcomes</option>
+              <option value="Passed">Passed Only</option>
+              <option value="Rejected">Rejected Only</option>
+              <option value="REBEL">Has Party Split / Rebellion</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="motions-list-container"></div>
+    </section>
+
+    <!-- ==========================================
+         LENS 2: ALIGNMENT, COALITION STRESS & REBELS
+         ========================================== -->
+    <section id="lens-alignment" class="lens-section">
+      <!-- Coalition Cohesion & Stress Gauge -->
+      <div id="coalition-stress-banner" style="margin-bottom: 1.1rem;"></div>
+
+      <!-- Head-to-Head Dyad Comparator -->
+      <div class="panel-card" style="margin-bottom: 1.1rem;">
+        <h3>Head-to-Head Councillor Voting Comparator</h3>
+        <p class="panel-subtitle">Compare any two councillors to calculate their voting agreement score across shared recorded divisions.</p>
+
+        <div class="dyad-selector-box">
+          <div>
+            <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Councillor A</label>
+            <select id="dyad-cllr-a" onchange="renderDyadComparison()"></select>
+          </div>
+          <div style="font-weight:800; color:var(--text-light); text-align:center;">VS</div>
+          <div>
+            <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Councillor B</label>
+            <select id="dyad-cllr-b" onchange="renderDyadComparison()"></select>
+          </div>
+        </div>
+
+        <div id="dyad-results-container"></div>
+      </div>
+
+      <div class="grid-2col">
+        <div class="panel-card">
+          <h3>Party Whip Deviations & Rebel Tracker</h3>
+          <p class="panel-subtitle">Councillors who voted against their own political group's plurality on a recorded division.</p>
+          <div class="matrix-table-wrap">
+            <table class="data-table" id="rebel-leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Councillor</th>
+                  <th>Group</th>
+                  <th>Loyalty</th>
+                  <th>Rebellions</th>
+                  <th>Division</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <h3>Inter-Party Cohesion Matrix</h3>
+          <p class="panel-subtitle">How often the majority of each political group voted the same way.</p>
+          <div class="matrix-table-wrap" id="party-matrix-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         LENS 3: COUNCILLOR DOSSIERS
+         ========================================== -->
+    <section id="lens-dossiers" class="lens-section">
+      <div class="filter-bar" id="dossiers-filter-bar">
+        <div class="search-row-mobile">
+          <div class="filter-group" style="flex: 2;">
+            <label for="cllr-search">Find Councillor by Name or Ward</label>
+            <input type="text" id="cllr-search" placeholder="e.g. Cowan, Courtenay, Cox, Milton, Leigh..." oninput="renderCllrDirectory()" />
+          </div>
+          <button class="btn btn-secondary mobile-filter-toggle" onclick="toggleMobileFilters('cllr-filters-collapse')">
+            ⚙ Group
+          </button>
+        </div>
+        <div class="filter-collapsible" id="cllr-filters-collapse">
+          <div class="filter-group">
+            <label for="cllr-party-filter">Political Group</label>
+            <select id="cllr-party-filter" onchange="renderCllrDirectory()">
+              <option value="ALL">All Political Groups</option>
+              <option value="Labour Group">Labour Group (17)</option>
+              <option value="Conservative Group">Conservative Group (11 active)</option>
+              <option value="Reform UK Group">Reform UK Group (11)</option>
+              <option value="Liberal Democrat Group">Liberal Democrat Group (3 active)</option>
+              <option value="Green Group">Green Group (4)</option>
+              <option value="Rochford & Southend East Independents Group">RSE Independents Group (3 active)</option>
+              <option value="Not Aligned">Non-Aligned Independents (2 active)</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="cllr-status-filter">Cohort Status</label>
+            <select id="cllr-status-filter" onchange="renderCllrDirectory()">
+              <option value="ALL">All Councillors (63)</option>
+              <option value="CURRENT">Current 2026/27 Chamber (51)</option>
+              <option value="former">Former 2024–26 Alumni (12)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="cllr-layout" id="cllr-master-detail-wrap">
+        <div class="cllr-list-Pane" id="cllr-directory-list"></div>
+        <div>
+          <div class="mobile-back-bar">
+            <button class="btn btn-secondary" style="width:100%; justify-content:flex-start;" onclick="closeMobileDossier()">
+              ← Back to All Councillors Directory
+            </button>
+          </div>
+          <div class="panel-card" id="cllr-dossier-detail"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         LENS 4: STRATMAP WARD VULNERABILITY BRIDGE
+         ========================================== -->
+    <section id="lens-stratmap" class="lens-section">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label for="stratmap-ward-filter">Filter by Electoral Ward</label>
+          <select id="stratmap-ward-filter" onchange="renderStratMapCards()"></select>
+        </div>
+        <div class="filter-group">
+          <label for="stratmap-year-filter">Strategic Vulnerability Filter</label>
+          <select id="stratmap-year-filter" onchange="renderStratMapCards()">
+            <option value="ALL">All 17 Wards</option>
+            <option value="VOTE_CLASH">⚡ Intra-Ward Councillor Vote Clash (Wedge Wards)</option>
+            <option value="SPLIT_PARTY">Split-Party Representation Wards</option>
+          </select>
+        </div>
+        <div style="align-self:flex-end;">
+          <button class="btn btn-primary" onclick="exportStratMapJSON()">
+            🗺 Export StratMap Ward Layer (.json)
+          </button>
+        </div>
+      </div>
+
+      <div class="stratmap-grid" id="stratmap-grid-container"></div>
+    </section>
+
+    <!-- ==========================================
+         LENS 5: MINUTE PARSER & WEB-SEARCH BRIEFING GENERATOR
+         ========================================== -->
+    <section id="lens-parser" class="lens-section">
+      <div class="parser-grid">
+        <!-- Left Column: Raw Minutes & Automated Web-Search Briefing Controls -->
+        <div class="panel-card">
+          <h3>Southend Minute-to-JSON & Briefing Parser</h3>
+          <p class="panel-subtitle">Paste raw division minutes to verify counts and generate the 4-part journalistic briefing.</p>
+
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.9rem;">
+            <button class="btn btn-secondary btn-sm" onclick="loadParserPreset('greenbelt')">
+              📋 Sample 1: Aug 2026 Green Belt
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadParserPreset('simulated')">
+              📋 Sample 2: Typo Resolver Demo
+            </button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.65rem; margin-bottom:0.65rem;">
+            <div>
+              <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Meeting Date</label>
+              <input type="date" id="parse-date" value="2026-10-15" onchange="runMinuteParser(false)" />
+            </div>
+            <div>
+              <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Minute Ref</label>
+              <input type="text" id="parse-minref" value="58" oninput="runMinuteParser(false)" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:0.65rem;">
+            <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Motion / Amendment Title</label>
+            <input type="text" id="parse-title" placeholder="e.g. Notice of Motion: Seafront Parking Review" oninput="runMinuteParser(false)" />
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.65rem; margin-bottom:0.65rem;">
+            <div>
+              <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Category</label>
+              <select id="parse-category" onchange="runMinuteParser(false)">
+                <option value="Green Belt & Planning">Green Belt & Planning</option>
+                <option value="Budget & Finance">Budget & Finance</option>
+                <option value="Highways & Transport">Highways & Transport</option>
+                <option value="Governance & Civic">Governance & Civic</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Outcome</label>
+              <select id="parse-outcome" onchange="runMinuteParser(false)">
+                <option value="Passed">Passed</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:0.8rem;">
+            <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Raw Minutes Text (Paste from Modern.Gov)</label>
+            <textarea id="parse-raw-text" rows="6" placeholder="For: Councillors S W Allen, S Allen... (31)" oninput="runMinuteParser(true)"></textarea>
+          </div>
+
+          <!-- Web-Search AI Briefing Generator Box -->
+          <div class="ai-research-box">
+            <div style="font-weight:800; font-size:0.78rem; color:var(--primary); text-transform:uppercase; margin-bottom:0.35rem;">
+              🔎 Automated Web-Search Briefing Generator
+            </div>
+            <p style="font-size:0.76rem; color:var(--text-muted); margin-bottom:0.6rem;">
+              Combines the exact mathematical rebel/split counts from your pasted minutes with live Google Search grounding (or copies a ready-made research prompt for chat).
+            </p>
+            <div style="margin-bottom:0.55rem;">
+              <input type="password" id="gemini-api-key" placeholder="Optional: Paste Gemini API Key for 1-click live Google Search grounding" />
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button class="btn btn-accent btn-sm" onclick="generateBriefingWithWebSearch()">
+                🌐 Auto-Research via Web Search
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="copyWebResearchPrompt()">
+                📋 Copy Research Prompt (Zero Key)
+              </button>
+            </div>
+            <div id="ai-briefing-status" style="margin-top:0.5rem; font-size:0.76rem;"></div>
+          </div>
+
+          <!-- 4-Part Journalistic Briefing Editor Fields -->
+          <div style="display:flex; flex-direction:column; gap:0.55rem; margin-bottom:0.85rem;">
+            <div>
+              <label style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Headline Hook (1-Sentence Summary)</label>
+              <input type="text" id="parse-headline" oninput="runMinuteParser(false)" />
+            </div>
+            <div>
+              <label style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">1. The Core Question</label>
+              <textarea id="parse-core-q" rows="2" oninput="runMinuteParser(false)"></textarea>
+            </div>
+            <div>
+              <label style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">2. Context & Stakeholders</label>
+              <textarea id="parse-context" rows="2" oninput="runMinuteParser(false)"></textarea>
+            </div>
+            <div>
+              <label style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">3. Political Calculus & Wedge Intent</label>
+              <textarea id="parse-calculus" rows="2" oninput="runMinuteParser(false)"></textarea>
+            </div>
+            <div>
+              <label style="font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">4. Anatomy of the Split</label>
+              <textarea id="parse-split" rows="2" oninput="runMinuteParser(false)"></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="runMinuteParser(false)">⚙ Validate Counts</button>
+            <button class="btn btn-success" id="btn-save-parsed" onclick="saveParsedMotionToApp()" disabled>✓ Save Division & Briefing to App</button>
+          </div>
+        </div>
+
+        <!-- Right Column: Checksum Diagnostics & JSON Output -->
+        <div class="panel-card">
+          <h3>Live Checksum & JSON Output</h3>
+          <p class="panel-subtitle">Verifies matched councillor IDs against the clerk's headcount.</p>
+          <div id="parser-diagnostics-box" style="margin-bottom: 0.9rem;"></div>
+          <div id="parser-unmatched-box"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <label style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-light);">Generated Motion + Briefing JSON</label>
+            <button class="btn btn-secondary btn-sm" onclick="copyParsedJson()">Copy JSON</button>
+          </div>
+          <pre class="code-preview" id="parser-json-preview">// Tap a sample button or paste minutes to generate JSON...</pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- INSTALL AS STANDALONE APP SHEET (iOS & Android) -->
+  <div class="modal-backdrop" id="install-modal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="install-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <h3 style="font-size:1.05rem; font-weight:800;">Install Southend VoteWatch App</h3>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('install-modal').classList.remove('open')">✕</button>
+      </div>
+      <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+        Add VoteWatch to your phone's Home Screen to launch it full-screen with its own icon—and receive new voting records automatically over the air.
+      </p>
+      <div style="background:var(--surface-alt); border:1px solid var(--border); border-radius:10px; padding:0.9rem; margin-bottom:0.75rem;">
+        <div style="font-weight:700; font-size:0.84rem; margin-bottom:0.35rem;">🍏 On iPhone / iPad (Safari):</div>
+        <ol style="padding-left:1.2rem; font-size:0.82rem; color:var(--text-muted); line-height:1.6;">
+          <li>Tap the <strong>Share</strong> icon (square with upward arrow) at the bottom of Safari.</li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong>, then tap <strong>Add</strong>.</li>
+        </ol>
+      </div>
+      <div style="background:var(--surface-alt); border:1px solid var(--border); border-radius:10px; padding:0.9rem;">
+        <div style="font-weight:700; font-size:0.84rem; margin-bottom:0.35rem;">🤖 On Android (Chrome / Samsung):</div>
+        <ol style="padding-left:1.2rem; font-size:0.82rem; color:var(--text-muted); line-height:1.6;">
+          <li>Tap the <strong>3-dot menu (⋮)</strong> in the browser corner.</li>
+          <li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 2 & PART 3 LINKS: Modular Data & Application Engine -->
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

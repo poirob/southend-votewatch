@@ -1,0 +1,19 @@
+{
+  "name": "Southend Council VoteWatch",
+  "short_name": "VoteWatch",
+  "description": "Southend-on-Sea City Council Recorded Divisions, Party Cohesion & Councillor Dossiers",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230f172a'/%3E%3Crect x='36' y='36' width='440' height='440' rx='72' fill='%231e3a8a'/%3E%3Ctext x='256' y='245' font-family='sans-serif' font-size='180' font-weight='800' fill='%2338bdf8' text-anchor='middle' dominant-baseline='middle'%3EVW%3C/text%3E%3Ctext x='256' y='385' font-family='sans-serif' font-size='52' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ESOUTHEND%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
